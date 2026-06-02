@@ -2,5 +2,5 @@
 	path = .config/nvim
 	url = git@github.com:LostmanMing/dotfiles-nvim.git
 [submodule "claude"]
-	path = claude
+	path = .claude
 	url = git@github.com:LostmanMing/dotfiles-claude.git

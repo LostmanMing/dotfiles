@@ -1,0 +1,68 @@
+# ── Shell ─────────────────────────────────────────────
+alias rm="trash"   # move to trash instead of delete
+
+# ── Git (daily) ────────────────────────────────────────
+alias gs='git status'
+alias ga='git add --all'
+alias gad='git add'
+alias gc='git commit -m'
+alias gcm='git commit'
+alias gp='git push'
+alias gq='git pull'
+alias gl='git log'
+alias gll='git log --graph --oneline --decorate'
+alias gd='git diff'
+alias gdc='git diff --cached'
+
+# ── Git (common) ───────────────────────────────────────
+alias gco='git checkout'
+alias gg='git switch'
+alias ggo='git switch -c'
+alias gm='git merge'
+alias gca='git commit --amend'
+alias gt='git stash'
+alias gtp='git stash pop'
+alias gr='git restore'
+alias grs='git restore --staged'
+alias gcl='git clone'
+alias gcl1='git clone --depth=1'
+
+# ── Git (occasional) ───────────────────────────────────
+alias gk='git reset'
+alias gkh='git reset --hard'
+alias gkha='git reset --hard HEAD^'
+alias grc='git rm --cached'
+alias gsmu='git submodule update --init --recursive'
+alias g='git'
+
+# ── Misc ───────────────────────────────────────────────
+alias p='python'
+alias h='history | tail'
+
+# ── Functions ──────────────────────────────────────────
+# universal archive extractor
+extract() {
+  if [ -z "$1" ]; then
+    echo "Usage: extract <file>"
+  elif [ -f "$1" ]; then
+    case "$1" in
+      *.tar.bz2) tar xvjf "$1"   ;;
+      *.tar.gz)  tar xvzf "$1"   ;;
+      *.tar.xz)  tar xvJf "$1"   ;;
+      *.lzma)    unlzma "$1"     ;;
+      *.bz2)     bunzip2 "$1"    ;;
+      *.rar)     unrar x -ad "$1" ;;
+      *.gz)      gunzip "$1"     ;;
+      *.tar)     tar xvf "$1"    ;;
+      *.tbz2)    tar xvjf "$1"   ;;
+      *.tgz)     tar xvzf "$1"   ;;
+      *.zip)     unzip "$1"      ;;
+      *.Z)       uncompress "$1" ;;
+      *.7z)      7z x "$1"       ;;
+      *.xz)      unxz "$1"       ;;
+      *)         echo "extract: '$1' - unknown format" ;;
+    esac
+  else
+    echo "$1 - file does not exist"
+  fi
+}

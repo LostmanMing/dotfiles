@@ -14,7 +14,7 @@ export ZSH="$HOME/.oh-my-zsh"
 # load a random theme each time Oh My Zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="random"
+ZSH_THEME="robbyrussell"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -134,55 +134,19 @@ unset __conda_setup
 
 export PATH="/usr/local/bin:$PATH"
 
-# This is a small command-line program for OS X that moves files or folders to the trash.
-# install: brew install trash
-# repo: https://github.com/ali-rantakari/trash
-# I think I should have received enough lessons. :(
-alias rm="trash"
-
 # opencode
 export PATH=/Users/zhaogm/.opencode/bin:$PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# aliases
+[[ -f ~/.zsh_aliases ]] && . ~/.zsh_aliases
+
+# alias lookup
+al() { \grep -i "${1:-.}" ~/.zsh_aliases; }
+
 
 # thefuck - command correction
 eval "$(thefuck --alias)"
-
-# ── Aliases ────────────────────────────────────────────
-# git (daily)
-alias gs='git status'
-alias ga='git add --all'
-alias gad='git add'
-alias gc='git commit -m'
-alias gcm='git commit'
-alias gp='git push'
-alias gq='git pull'
-alias gl='git log'
-alias gll='git log --graph --oneline --decorate'
-alias gd='git diff'
-alias gdc='git diff --cached'
-# git (common)
-alias gco='git checkout'
-alias gg='git switch'
-alias ggo='git switch -c'
-alias gm='git merge'
-alias gca='git commit --amend'
-alias gt='git stash'
-alias gtp='git stash pop'
-alias gr='git restore'
-alias grs='git restore --staged'
-alias gcl='git clone'
-alias gcl1='git clone --depth=1'
-# git (occasional)
-alias gk='git reset'
-alias gkh='git reset --hard'
-alias gkha='git reset --hard HEAD^'
-alias grc='git rm --cached'
-alias gsmu='git submodule update --init --recursive'
-alias g='git'
-# misc
-alias p='python'
-alias h='history | tail'
 
 # p10k config
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
