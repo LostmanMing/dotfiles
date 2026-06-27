@@ -1,0 +1,6 @@
+require("items.widgets.wechat_and_qq")
+require("items.widgets.bluetooth")
+require("items.widgets.volume")
+require("items.widgets.battery")
+require("items.widgets.wifi")
+require("items.widgets.cpu_and_temp")
