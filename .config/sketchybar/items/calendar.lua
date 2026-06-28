@@ -36,7 +36,7 @@ M.cal = sbar.add("item", {
 -- Double border for calendar using a single item bracket
 
 -- Padding item required because of bracket
--- sbar.add("item", { position = "right", width = settings.group_paddings })
+sbar.add("item", { position = "right", width = settings.group_paddings })
 
 M.cal:subscribe({ "forced", "routine", "system_woke" }, function(env)
 	M.cal:set({ icon = os.date("%a. %d %b "), label = os.date("%H:%M:%S") })

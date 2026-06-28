@@ -98,9 +98,9 @@ end)
 -- 	},
 -- })
 --
--- sbar.add("item", "widgets.battery.padding", {
--- 	position = "right",
--- 	width = settings.group_paddings,
--- })
+sbar.add("item", "widgets.battery.padding", {
+	position = "right",
+	width = settings.group_paddings,
+})
 
 return M

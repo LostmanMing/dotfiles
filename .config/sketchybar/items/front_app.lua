@@ -1,49 +1,22 @@
 local colors = require("colors")
 local settings = require("settings")
-
 local M = {}
-
-sbar.add("item", {
-	width = 10,
-})
-
+sbar.add("item", { width = 4 })
 M.front_app = sbar.add("item", "front_app", {
-	display = "active",
-	position = "left",
-	y_offset = 0,
-	icon = { drawing = false },
-	label = {
-		align = "center",
-		padding_left = 0,
-		padding_right = 0,
-		font = {
-			style = settings.font.style_map["Black"],
-			size = 12.0,
-		},
-		color = colors.front_app_color,
-		max_chars = 7,
-	},
-	updates = true,
-	scroll_texts = true,
+  display = "active", position = "left",
+  icon = { drawing = false },
+  label = {
+    align = "center", padding_left = 4, padding_right = 4,
+    font = { style = settings.font.style_map["Black"], size = 12.0 },
+    color = colors.front_app_color, max_chars = 7,
+  },
+  updates = true, scroll_texts = true,
 })
-
-M.front_app_bracket = sbar.add("bracket", {
-	M.front_app.name,
-}, {
-	background = {
-		color = colors.bg3,
-		border_width = 0,
-		height = 25,
-		corner_radius = 20,
-	},
+M.bracket = sbar.add("bracket", { M.front_app.name }, {
+  background = { color = colors.bg3, border_width = 0, height = 25, corner_radius = 8 },
 })
-
-sbar.add("item", {
-	width = 5,
-})
-
+sbar.add("item", { width = 4 })
 M.front_app:subscribe("front_app_switched", function(env)
-	M.front_app:set({ label = { string = env.INFO } })
+  M.front_app:set({ label = { string = env.INFO } })
 end)
-
 return M

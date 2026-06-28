@@ -29,16 +29,16 @@ M.temp = sbar.add("graph", "widgets.temp", 42, {
 		font = {
 			family = settings.font.numbers,
 			style = settings.font.style_map["Bold"],
-			size = 9.0,
+			size = 8.0,
 		},
 		align = "right",
-		padding_right = 1,
+		padding_right = 4,
 		-- padding_left = 2,
 		width = 0,
 		y_offset = 4,
 	},
 	blur_radius = colors.blur_radius,
-	padding_right = -3,
+	padding_right = 3,
 })
 
 M.cpu = sbar.add("graph", "widgets.cpu", 42, {
@@ -57,14 +57,14 @@ M.cpu = sbar.add("graph", "widgets.cpu", 42, {
 		font = {
 			family = settings.font.numbers,
 			style = settings.font.style_map["Bold"],
-			size = 9.0,
+			size = 8.0,
 		},
 		align = "right",
-		padding_right = 1,
+		padding_right = 4,
 		width = 0,
 		y_offset = 4,
 	},
-	padding_right = -3,
+	padding_right = 3,
 })
 
 local function updateTemperature()
