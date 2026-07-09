@@ -1,0 +1,40 @@
+os:
+  # e/编辑：若在父 nvim 内（$NVIM 存在），关掉 lazygit 窗口，用 --remote-tab
+  # 在宿主 nvim 打开文件 buffer，随后自动触发 gitsigns diff（等价 <leader>gd）。
+  # 不在 nvim 内时回退到独立 nvim。
+  edit: '[ -z "$NVIM" ] && nvim -- {{filename}} || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote-tab {{filename}} && nvim --server "$NVIM" --remote-send "<C-\><C-n>:lua vim.defer_fn(function() pcall(require([[gitsigns]]).diffthis) end, 120)<CR>")'
+  editAtLine: '[ -z "$NVIM" ] && nvim +{{line}} -- {{filename}} || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote-tab {{filename}} && nvim --server "$NVIM" --remote-send ":{{line}}<CR>" && nvim --server "$NVIM" --remote-send "<C-\><C-n>:lua vim.defer_fn(function() pcall(require([[gitsigns]]).diffthis) end, 120)<CR>")'
+  editAtLineAndWait: 'nvim +{{line}} {{filename}}'
+  # o/openFile 用同样的 remote-tab 方式打开，但不触发 diff
+  open: '[ -z "$NVIM" ] && nvim -- {{filename}} || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote-tab {{filename}})'
+
+gui:
+  theme:
+    # 非激活边框：暗灰
+    inactiveBorderColor:
+      - "#4b5263"
+    # 激活边框：柔和蓝，不刺眼
+    activeBorderColor:
+      - "#61afef"
+      - bold
+    # 选中行背景：低调深灰，替代默认刺眼的高亮蓝
+    selectedLineBgColor:
+      - "#3e4451"
+    # 可选项高亮文字
+    optionsTextColor:
+      - "#61afef"
+    # cherry-pick 复制的高亮
+    cherryPickedCommitBgColor:
+      - "#3e4451"
+    cherryPickedCommitFgColor:
+      - "#61afef"
+    # 标记的 base commit
+    markedBaseCommitBgColor:
+      - "#3e4451"
+    markedBaseCommitFgColor:
+      - "#e5c07b"
+    unstagedChangesColor:
+      - "#e06c75"
+  # 圆角边框，观感更柔和
+  border: "rounded"
+  showRandomTip: false
