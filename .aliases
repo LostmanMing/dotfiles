@@ -1,7 +1,4 @@
 # ── Shell ─────────────────────────────────────────────
-alias rm='rm -i'
-alias cp='cp -i'
-alias mv='mv -i'
 alias path='echo -e ${PATH//:/\\n}'
 alias please='sudo $(history -p !!)'
 
