@@ -138,11 +138,11 @@ export PATH="/usr/local/bin:$PATH"
 export PATH=/Users/zhaogm/.opencode/bin:$PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# aliases
-[[ -f ~/.zsh_aliases ]] && . ~/.zsh_aliases
+# aliases (shared with bash)
+[[ -f ~/.aliases ]] && . ~/.aliases
 
 # alias lookup
-al() { \grep -i "${1:-.}" ~/.zsh_aliases; }
+al() { \grep -i "${1:-.}" ~/.aliases; }
 
 
 # thefuck - command correction
