@@ -44,14 +44,18 @@ bash ~/.claude/setup.sh deepseek    # 输入 API Key
 
 ## 2. Shell
 
-本仓库只保存个人追加配置，不全量覆盖。使用时**追加**到本地已有配置：
+本仓库只保存个人追加配置，不全量覆盖。使用时**追加**到本地已有配置。
+
+先确认当前终端类型（`echo $SHELL`），选择对应文件：
 
 ```bash
-# .zshrc / .bashrc 追加到本地
+# Zsh 用户：追加 .zshrc
 cat ~/dotfiles/.zshrc >> ~/.zshrc
+
+# Bash 用户：追加 .bashrc
 cat ~/dotfiles/.bashrc >> ~/.bashrc
 
-# .aliases 直接软链
+# 通用别名（软链，bash/zsh 共用）
 ln -sf ~/dotfiles/.aliases ~/.aliases
 ```
 
@@ -59,16 +63,24 @@ ln -sf ~/dotfiles/.aliases ~/.aliases
 
 ## 3. Neovim
 
-> 详见 `.config/nvim/README.md`
+> 详见 `.config/nvim/AGENTS.md`
 
 ```bash
 ln -sf ~/dotfiles/.config/nvim ~/.config/nvim
 nvim  # 首次启动自动安装插件和 LSP
 ```
 
+## 4. Lazygit
+
+主题 + 编辑行为配置，与 Neovim 联动：从 lazygit 打开文件会自动在宿主 nvim 中打开并触发 gitsigns diff。
+
+```bash
+ln -sf ~/dotfiles/.config/lazygit ~/.config/lazygit
+```
+
 ---
 
-## 4. iTerm2 (macOS)
+## 5. iTerm2 (macOS)
 
 ```bash
 ln -sf ~/dotfiles/iterm2/iterm2.json \
@@ -77,21 +89,10 @@ ln -sf ~/dotfiles/iterm2/iterm2.json \
 
 ---
 
-## 5. Aerospace & SketchyBar (macOS)
+## 6. Aerospace & SketchyBar (macOS)
 
 ```bash
 ln -sf ~/dotfiles/.config/aerospace ~/.config/aerospace
 ln -sf ~/dotfiles/.config/sketchybar ~/.config/sketchybar
 bash ~/dotfiles/.config/install.sh
-```
-
----
-
-## 6. SSH
-
-`~/.ssh/config` 手动管理，不包含在 dotfiles 中。
-
-免密登录：
-```bash
-ssh-copy-id -i ~/.ssh/id_rsa.pub <host>
 ```
