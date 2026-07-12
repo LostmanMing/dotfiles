@@ -7,8 +7,12 @@ My dotfiles managed with git submodules.
 | Config | Repo | Description |
 |--------|------|-------------|
 | Neovim | [dotfiles-nvim](https://github.com/LostmanMing/dotfiles-nvim) | Full Neovim IDE setup |
-
-More to come.
+| Tmux | [dotfiles](https://github.com/LostmanMing/dotfiles) | Terminal multiplexer config |
+| Lazygit | [dotfiles](https://github.com/LostmanMing/dotfiles) | Git TUI theme config |
+| Claude Code | [dotfiles-claude](https://github.com/LostmanMing/dotfiles-claude) | AI assistant config |
+| iTerm2 | [dotfiles](https://github.com/LostmanMing/dotfiles) | Terminal profile |
+| Aerospace | [dotfiles](https://github.com/LostmanMing/dotfiles) | Tiling WM config |
+| SketchyBar | [dotfiles](https://github.com/LostmanMing/dotfiles) | Status bar config |
 
 ## Installation
 
@@ -27,8 +31,18 @@ nvim
 
 ```
 ~/dotfiles/
-└── .config/
-    └── nvim/     → LostmanMing/dotfiles-nvim (submodule)
+├── .config/
+│   ├── nvim/       → LostmanMing/dotfiles-nvim (submodule)
+│   ├── tmux/       → tmux config
+│   ├── lazygit/    → lazygit theme
+│   ├── aerospace/   → tiling WM
+│   └── sketchybar/  → status bar
+├── .claude/         → LostmanMing/dotfiles-claude (submodule)
+├── iterm2/          → iTerm2 profile
+├── .zshrc
+├── .bashrc
+├── .aliases
+└── AGENTS.md
 ```
 
 ## How It Works

@@ -78,9 +78,20 @@ nvim  # 首次启动自动安装插件和 LSP
 ln -sf ~/dotfiles/.config/lazygit ~/.config/lazygit
 ```
 
+## 5. Tmux
+
+> 详见 `.config/tmux/README.md`
+
+```bash
+ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
+tmux source ~/.config/tmux/tmux.conf
+```
+
+Prefix: `Ctrl+z`，面板导航 `h/j/k/l`，分屏 `\`/`-`（对齐 nvim）。
+
 ---
 
-## 5. iTerm2 (macOS)
+## 6. iTerm2 (macOS)
 
 ```bash
 ln -sf ~/dotfiles/iterm2/iterm2.json \
@@ -89,7 +100,7 @@ ln -sf ~/dotfiles/iterm2/iterm2.json \
 
 ---
 
-## 6. Aerospace & SketchyBar (macOS)
+## 7. Aerospace & SketchyBar (macOS)
 
 ```bash
 ln -sf ~/dotfiles/.config/aerospace ~/.config/aerospace
