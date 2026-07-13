@@ -9,6 +9,21 @@ tmux source ~/.config/tmux/tmux.conf
 
 ## Prefix: `Ctrl+z`
 
+## Dependencies
+
+| 工具 | 用途 | 安装 |
+|------|------|------|
+| tmux >= 3.2 | 终端复用器 | `brew install tmux` |
+| TPM | 插件管理器 | 自动 clone 到 `~/.tmux/plugins/tpm` |
+| reattach-to-user-namespace | macOS 剪贴板互通 | `brew install reattach-to-user-namespace` |
+
+## Plugins
+
+| 插件 | 作用 |
+|------|------|
+| tmux-yank | 复制到系统剪贴板（`y` 在 copy mode 中） |
+| tmux.nvim | `Ctrl+hjkl` nvim ↔ tmux 面板无缝导航 |
+
 ## Keybindings
 
 ### Pane
