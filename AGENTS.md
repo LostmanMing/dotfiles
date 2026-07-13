@@ -87,8 +87,7 @@ ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
 tmux source ~/.config/tmux/tmux.conf
 ```
 
-Prefix: `Ctrl+z`，面板导航 `h/j/k/l`，分屏 `\`/`-`（对齐 nvim）。  
-macOS 需额外安装 `reattach-to-user-namespace` 才能剪贴板互通。
+Prefix: `Ctrl+z`，面板导航 `h/j/k/l`，分屏 `\`/`-`（对齐 nvim）。
 
 ---
 
