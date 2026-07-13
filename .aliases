@@ -11,7 +11,7 @@ alias gcm='git commit'
 alias gp='git push'
 alias gq='git pull'
 alias gl='git log'
-alias gll='git log --graph --oneline --decorate'
+alias gll='git log --graph --oneline --decorate --color=always | less -R'
 alias gd='git diff'
 alias gdc='git diff --cached'
 
