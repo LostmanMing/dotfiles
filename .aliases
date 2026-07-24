@@ -27,6 +27,8 @@ alias gr='git restore'
 alias grs='git restore --staged'
 alias gcl='git clone'
 alias gcl1='git clone --depth=1'
+alias gba='git branch -a'
+alias gcp='git cherry-pick'
 
 # ── Git (occasional) ───────────────────────────────────
 alias gk='git reset'
@@ -41,6 +43,7 @@ alias g='git'
 # ── Misc ───────────────────────────────────────────────
 alias p='python'
 alias h='history | tail'
+alias mi='make -j$(nproc) && make install'
 
 # ── Functions ──────────────────────────────────────────
 # universal archive extractor
