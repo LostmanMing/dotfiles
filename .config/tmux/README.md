@@ -22,6 +22,7 @@ tmux source ~/.config/tmux/tmux.conf
 |------|------|
 | tmux.nvim | `Ctrl+hjkl` nvim ↔ tmux 面板无缝导航 |
 | tmux-thumbs | `prefix + f` 屏幕词/路径/URL 标字母一键复制（需 cargo 构建） |
+| tmux-jump | `prefix + Space` 再按 `s`，easymotion 式跳转光标（需 ruby） |
 
 ## Clipboard
 
