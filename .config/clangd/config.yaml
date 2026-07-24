@@ -1,0 +1,6 @@
+# clangd 用户级配置
+# 关闭 clang-tidy 的命名风格检查（"invalid case style for variable ..."），保留其它检查
+Diagnostics:
+  ClangTidy:
+    Remove:
+      - readability-identifier-naming
