@@ -21,7 +21,7 @@ tmux source ~/.config/tmux/tmux.conf
 | 插件 | 作用 |
 |------|------|
 | tmux.nvim | `Ctrl+hjkl` nvim ↔ tmux 面板无缝导航 |
-| tmux-thumbs | `prefix + F` 屏幕词/路径/URL 标字母一键复制（需 cargo 构建） |
+| tmux-thumbs | `prefix + f` 屏幕词/路径/URL 标字母一键复制（需 cargo 构建） |
 
 ## Clipboard
 
