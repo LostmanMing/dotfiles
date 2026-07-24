@@ -3,18 +3,23 @@
 ## Install
 
 ```bash
+# 软链配置（tmux 3.1+ 读 XDG 路径）
 ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
+
+# 装 TPM 插件管理器
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+# 加载配置
 tmux source ~/.config/tmux/tmux.conf
+
+# 在 tmux 内 prefix + I 拉取插件，然后：
+cd ~/.tmux/plugins/tmux-thumbs && cargo build --release   # tmux-thumbs 需构建
+command -v ruby || echo "tmux-jump 需要 ruby"              # tmux-jump 需 ruby
 ```
 
+> 完整依赖清单见 `AGENTS.md`。改完配置用 `tmux source ~/.config/tmux/tmux.conf` 重载。
+
 ## Prefix: `Ctrl+z`
-
-## Dependencies
-
-| 工具 | 用途 | 安装 |
-|------|------|------|
-| tmux >= 3.2 | 终端复用器 | 包管理器安装 |
-| TPM | 插件管理器 | `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm` |
 
 ## Plugins
 
@@ -23,6 +28,11 @@ tmux source ~/.config/tmux/tmux.conf
 | tmux.nvim | `Ctrl+hjkl` nvim ↔ tmux 面板无缝导航 |
 | tmux-thumbs | `prefix + f` 屏幕词/路径/URL 标字母一键复制（需 cargo 构建） |
 | tmux-jump | `prefix + Space` 再按 `s`，easymotion 式跳转光标（需 ruby） |
+
+### 插件用法
+
+- **tmux-thumbs**：`prefix + f` → 屏幕上的词/路径/URL/hash 标上字母 → 按对应字母即复制（经 `set-clipboard on` + OSC52 进系统剪贴板）。
+- **tmux-jump**：`prefix + Space` 进入 `jump` 子表（状态栏左侧会显示 `jump`）→ 按 `s` → 输入一个目标字符 → 屏幕上该字符处标字母 → 按字母把光标跳过去；`Esc` 退出子表。
 
 ## Clipboard
 
@@ -78,3 +88,7 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | 快捷键 | 功能 |
 |--------|------|
 | `prefix + ?` | 显示所有快捷键 |
+
+### 状态栏提示
+
+左侧状态块随当前按键状态变化：按下 `prefix` 显示暗黄底 `PREFIX`；进入自定义 key-table（如 `prefix + Space` 后的 `jump` 子表）显示该表名字；平时蓝底显示 session 名。
