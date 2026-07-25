@@ -138,6 +138,9 @@ export PATH="/usr/local/bin:$PATH"
 export PATH=/Users/zhaogm/.opencode/bin:$PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# 所有 cmake 构建自动生成 compile_commands.json（clangd 找头文件用，CMake ≥3.17）
+export CMAKE_EXPORT_COMPILE_COMMANDS=1
+
 # aliases (shared with bash)
 [[ -f ~/.aliases ]] && . ~/.aliases
 

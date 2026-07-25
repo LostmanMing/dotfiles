@@ -19,5 +19,9 @@ alias grep='grep --color=auto'
 # ── PATH ────────────────────────────────────────────
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
+# ── Env ─────────────────────────────────────────────
+# 所有 cmake 构建自动生成 compile_commands.json（clangd 找头文件用，CMake ≥3.17）
+export CMAKE_EXPORT_COMPILE_COMMANDS=1
+
 # ── Shared Aliases ──────────────────────────────────
 [[ -f ~/.aliases ]] && . ~/.aliases
