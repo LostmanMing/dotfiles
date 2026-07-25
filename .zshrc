@@ -141,9 +141,6 @@ export PATH="$HOME/.local/bin:$PATH"
 # aliases (shared with bash)
 [[ -f ~/.aliases ]] && . ~/.aliases
 
-# alias lookup
-al() { \grep -i "${1:-.}" ~/.aliases; }
-
 
 # thefuck - command correction
 eval "$(thefuck --alias)"

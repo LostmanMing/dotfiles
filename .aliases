@@ -51,6 +51,9 @@ alias mi='make -j$(nproc) && make install'
 alias ff='fastfetch'
 
 # ── Functions ──────────────────────────────────────────
+# 查别名：al git → 列出含 git 的别名；无参数列全部
+al() { \grep -i "${1:-.}" ~/.aliases; }
+
 # universal archive extractor
 extract() {
   if [ -z "$1" ]; then
