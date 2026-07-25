@@ -25,7 +25,7 @@ command -v ruby || echo "tmux-jump 需要 ruby"              # tmux-jump 需 rub
 
 | 插件 | 作用 |
 |------|------|
-| tmux.nvim | `Ctrl+hjkl` nvim ↔ tmux 面板无缝导航 |
+| vim-tmux-navigator | `Ctrl+hjkl` nvim ↔ tmux 无缝导航（tmux 侧为原生绑定，不依赖 TPM；nvim 侧装 christoomey/vim-tmux-navigator） |
 | tmux-thumbs | `prefix + f` 屏幕词/路径/URL 标字母一键复制（需 cargo 构建） |
 | tmux-jump | `prefix + Space` 再按 `s`，easymotion 式跳转光标（需 ruby） |
 

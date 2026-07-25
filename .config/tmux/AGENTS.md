@@ -21,7 +21,7 @@
 |------|------|------|
 | tmux-thumbs | Rust / `cargo` | Rust 二进制，装完需 `cargo build --release` 构建 |
 | tmux-jump | `ruby` | 跳转脚本用 ruby 运行，PATH 里必须有 `ruby` |
-| tmux.nvim | Neovim | 与 nvim 侧的 `aserowy/tmux.nvim` 配合，实现 `Ctrl+hjkl` 无缝导航 |
+| vim-tmux-navigator | Neovim | nvim 侧装 `christoomey/vim-tmux-navigator`；tmux 侧是 tmux.conf 原生绑定，不依赖 TPM |
 
 ### 版本过旧时的处理
 
@@ -55,6 +55,7 @@ command -v ruby || echo "请先安装 ruby"
 ## 排错
 
 - **tmux-jump 报 `returned 127`**：多为 `ruby` 未安装，或插件未 `prefix + I` 安装到 `~/.tmux/plugins/tmux-jump`。先 `command -v ruby` 和 `ls ~/.tmux/plugins/tmux-jump`。
+- **TPM 插件全部静默不生效**：检查 `TMUX_PLUGIN_MANAGER_PATH`。配置在 XDG 路径（`~/.config/tmux/`）时 TPM 默认装到 `~/.config/tmux/plugins/`，与实际的 `~/.tmux/plugins/` 不一致会导致全部插件不加载。本配置已在 tmux.conf 里显式指定为 `~/.tmux/plugins/`。
 - **插件未生效**：改完 `@plugin` 后要先 `tmux source`，再 `prefix + I`。
 - **快捷键/配置改动**：`tmux source ~/.config/tmux/tmux.conf` 重载；部分选项（`set-clipboard`、`default-terminal`）对已存在 pane 不完全生效，可新开 pane 或 `tmux kill-server` 重启。
 
