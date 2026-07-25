@@ -25,3 +25,7 @@ export CMAKE_EXPORT_COMPILE_COMMANDS=1
 
 # ── Shared Aliases ──────────────────────────────────
 [[ -f ~/.aliases ]] && . ~/.aliases
+
+# ── Startup ─────────────────────────────────────────
+# 新开终端显示系统信息（未安装 fastfetch 的机器静默跳过）
+command -v fastfetch >/dev/null && fastfetch
