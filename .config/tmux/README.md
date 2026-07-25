@@ -88,6 +88,7 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | 快捷键 | 功能 |
 |--------|------|
 | `prefix + ?` | 显示所有快捷键 |
+| `prefix + R` | 重载配置 |
 
 ### 状态栏提示
 
