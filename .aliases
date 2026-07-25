@@ -48,6 +48,7 @@ alias g='git'
 alias p='python'
 alias h='history | tail'
 alias mi='make -j$(nproc) && make install'
+alias ff='fastfetch'
 
 # ── Functions ──────────────────────────────────────────
 # universal archive extractor
