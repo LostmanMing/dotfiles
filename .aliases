@@ -1,3 +1,7 @@
+# ── Env ────────────────────────────────────────────────
+# 所有 cmake 构建自动生成 compile_commands.json（clangd 找头文件用，CMake ≥3.17）
+export CMAKE_EXPORT_COMPILE_COMMANDS=1
+
 # ── Shell ─────────────────────────────────────────────
 alias path='echo -e ${PATH//:/\\n}'
 alias please='sudo $(history -p !!)'
