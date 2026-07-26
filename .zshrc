@@ -1,9 +1,3 @@
-# Enable p10k instant prompt (must be at top)
-P10K=1
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
@@ -115,7 +109,6 @@ source ~/Codes/repos/znap/znap.zsh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 znap source zsh-users/zsh-syntax-highlighting
 znap source zsh-users/zsh-autosuggestions
-znap source romkatv/powerlevel10k
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
@@ -145,8 +138,8 @@ export CMAKE_EXPORT_COMPILE_COMMANDS=1
 [[ -f ~/.aliases ]] && . ~/.aliases
 
 
-# p10k config
-[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+# starship 提示符（配置 ~/.config/starship.toml，与 bash 共用）；未安装则用 omz 默认主题
+command -v starship >/dev/null && eval "$(starship init zsh)"
 
 # Claude Code（未配置 .claude 的机器跳过）
 [[ -f ~/.claude/integration.sh ]] && source ~/.claude/integration.sh
