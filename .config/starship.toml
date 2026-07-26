@@ -1,31 +1,70 @@
 # starship 提示符配置（bash/zsh 共用）
 # 文档：https://starship.rs/config/
+# 风格：两行式、简洁字符风（无 powerline 色块）
 
-# 命令间加空行，视觉更清爽
-add_newline = true
+add_newline = true   # 命令之间空一行
 
-# 两行式：信息行 + 输入符
+# 第一行：SSH 主机标识 + 目录 + git + 语言版本 + 命令耗时；第二行：输入符
 format = """
-$directory$git_branch$git_status$cmd_duration
+$username$hostname$directory$git_branch$git_status$c$cmake$python$lua$nodejs$rust$cmd_duration
 $character"""
 
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
 
+# ── 主机标识：仅 SSH 连接时显示 user@host，区分本地/远程 ──
+[username]
+format = "[$user]($style)[@](dim)"
+style_user = "bold yellow"
+style_root = "bold red"
+show_always = false           # 本地普通用户不显示（root/SSH 时显示）
+
+[hostname]
+ssh_only = true               # 只在 SSH 会话显示
+format = "[$hostname]($style) "
+style = "bold yellow"
+
+# ── 目录 ──
 [directory]
-truncation_length = 4          # 最多显示 4 层目录
-truncate_to_repo = true        # 在 git 仓库里从仓库根开始显示
+truncation_length = 4          # 最多显示 4 层
+truncate_to_repo = true        # git 仓库里从仓库根开始
 style = "bold cyan"
 
+# ── git ──
 [git_branch]
-symbol = " "                  # Nerd Font 分支图标
+symbol = " "
 style = "bold purple"
 
 [git_status]
 style = "bold yellow"
 
-# 命令耗时超过 2s 才显示
+# ── 语言版本：进入对应项目才显示 ──
+[c]
+symbol = "C "
+style = "bold blue"
+
+[cmake]
+symbol = "△ "
+style = "bold blue"
+
+[python]
+symbol = "🐍 "
+style = "bold green"
+
+[lua]
+symbol = "🌙 "
+style = "bold blue"
+
+[nodejs]
+symbol = " "
+style = "bold green"
+
+[rust]
+symbol = "🦀 "
+style = "bold red"
+
+# ── 命令耗时：超过 2s 才显示 ──
 [cmd_duration]
 min_time = 2000
 style = "bold yellow"
