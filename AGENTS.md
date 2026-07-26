@@ -57,6 +57,12 @@ cat ~/dotfiles/.bashrc >> ~/.bashrc
 
 # 通用别名（软链，bash/zsh 共用）
 ln -sf ~/dotfiles/.aliases ~/.aliases
+
+# starship 提示符配置（bash 用；zsh 端仍是 p10k）
+ln -sf ~/dotfiles/.config/starship.toml ~/.config/starship.toml
+# 需安装 starship 二进制（未安装则自动回落默认 PS1）：
+# 从 GitHub Release 下载 starship-x86_64-unknown-linux-gnu.tar.gz，
+# 解压后 install starship /usr/local/bin/（网络差走 ghfast.top 镜像）
 ```
 
 ---

@@ -25,3 +25,7 @@ export CMAKE_EXPORT_COMPILE_COMMANDS=1
 
 # ── Shared Aliases ──────────────────────────────────
 [[ -f ~/.aliases ]] && . ~/.aliases
+
+# ── Prompt ──────────────────────────────────────────
+# starship 提示符（配置在 ~/.config/starship.toml）；未安装的机器用默认 PS1
+command -v starship >/dev/null && eval "$(starship init bash)"

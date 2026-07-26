@@ -145,12 +145,9 @@ export CMAKE_EXPORT_COMPILE_COMMANDS=1
 [[ -f ~/.aliases ]] && . ~/.aliases
 
 
-# thefuck - command correction
-eval "$(thefuck --alias)"
-
 # p10k config
 [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
 
-# Claude Code
-source ~/.claude/integration.sh
-source ~/.claude/integration-providers.sh
+# Claude Code（未配置 .claude 的机器跳过）
+[[ -f ~/.claude/integration.sh ]] && source ~/.claude/integration.sh
+[[ -f ~/.claude/integration-providers.sh ]] && source ~/.claude/integration-providers.sh

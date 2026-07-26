@@ -1,0 +1,31 @@
+# starship 提示符配置（bash/zsh 共用）
+# 文档：https://starship.rs/config/
+
+# 命令间加空行，视觉更清爽
+add_newline = true
+
+# 两行式：信息行 + 输入符
+format = """
+$directory$git_branch$git_status$cmd_duration
+$character"""
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[directory]
+truncation_length = 4          # 最多显示 4 层目录
+truncate_to_repo = true        # 在 git 仓库里从仓库根开始显示
+style = "bold cyan"
+
+[git_branch]
+symbol = " "                  # Nerd Font 分支图标
+style = "bold purple"
+
+[git_status]
+style = "bold yellow"
+
+# 命令耗时超过 2s 才显示
+[cmd_duration]
+min_time = 2000
+style = "bold yellow"
