@@ -76,15 +76,7 @@ ln -sf ~/dotfiles/.config/nvim ~/.config/nvim
 nvim  # 首次启动自动安装插件和 LSP
 ```
 
-## 4. Lazygit
-
-主题 + 编辑行为配置，与 Neovim 联动：从 lazygit 打开文件会自动在宿主 nvim 中打开并触发 gitsigns diff。
-
-```bash
-ln -sf ~/dotfiles/.config/lazygit ~/.config/lazygit
-```
-
-## 5. Tmux
+## 4. Tmux
 
 > 详见 `.config/tmux/README.md`
 
@@ -97,7 +89,7 @@ Prefix: `Ctrl+z`，面板导航 `h/j/k/l`，分屏 `\`/`-`（对齐 nvim）。
 
 ---
 
-## 6. clangd
+## 5. clangd
 
 用户级配置，关闭 clang-tidy 的命名风格检查（"invalid case style for variable ..."），其它检查保留。
 
@@ -107,7 +99,7 @@ ln -sf ~/dotfiles/.config/clangd ~/.config/clangd
 
 ---
 
-## 7. iTerm2 (macOS)
+## 6. iTerm2 (macOS)
 
 ```bash
 ln -sf ~/dotfiles/iterm2/iterm2.json \
@@ -116,7 +108,7 @@ ln -sf ~/dotfiles/iterm2/iterm2.json \
 
 ---
 
-## 8. Aerospace & SketchyBar (macOS)
+## 7. Aerospace & SketchyBar (macOS)
 
 ```bash
 ln -sf ~/dotfiles/.config/aerospace ~/.config/aerospace
