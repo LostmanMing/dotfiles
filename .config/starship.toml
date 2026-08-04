@@ -12,12 +12,26 @@ add_newline = true   # 命令之间空一行
 
 palette = "onedark"
 
-# 第一行：SSH 主机标识 + 目录 + git + 语言版本 + 命令耗时；第二行：输入符
+# 外部命令超时。默认 500ms 在慢机器上偶发不够（git 扫大仓库状态时会抖一下），
+# 小幅抬到 1000 吸收抖动。不抬更高：抬高只是让 starship 等更久，不会让命令变快，
+# 超时设太长反而让提示符明显卡顿。真正的降耗手段是下面不求值语言版本模块。
+command_timeout = 1000
+
+# 第一行：SSH 主机标识 + 目录 + git + 命令耗时；第二行：输入符
 # 注意：format/add_newline/palette 都是根级键，必须写在任何 [表头] 之前，
 # 否则会被 TOML 解析进上一个表（曾把 format 放到 [palettes.onedark] 之后，
 # 结果变成 palettes.onedark.format，根级 format 丢失、starship 回落默认格式）。
+#
+# 不放语言版本模块（$c $cmake $python $lua $nodejs $rust）：它们每画一次提示符
+# 就要 fork 一次外部进程跑 <tool> --version。在慢机器上（网络挂载的工作区、
+# 容器负载）单次会超过默认 command_timeout 500ms，刷出成片的
+# "Executing command timed out" 警告。而版本号是装饰性信息——nvim 里已有 LSP
+# 和 statusline，终端提示符里显示 cmake 版本号的用途接近于零，延迟却是每次
+# 回车都要付的。模块只要不出现在 format 里，starship 就完全不会求值，
+# 比逐个 disabled = true 更彻底。要恢复就把 $c$cmake$python$lua$nodejs$rust
+# 加回下面这行，并补上对应的 [c] [cmake] … 段（见 git 历史）。
 format = """
-$username$hostname$directory$git_branch$git_status$c$cmake$python$lua$nodejs$rust$cmd_duration
+$username$hostname$directory$git_branch$git_status$cmd_duration
 $character"""
 
 # 色值取自 onedarkpro 的实际高亮组。名字沿用 ANSI 色名以覆盖标准色，
@@ -62,31 +76,6 @@ style = "eva_purple"           # 与 lualine 状态栏的分支色一致
 
 [git_status]
 style = "yellow"
-
-# ── 语言版本：进入对应项目才显示 ──
-[c]
-symbol = "C "
-style = "blue"
-
-[cmake]
-symbol = "△ "
-style = "blue"
-
-[python]
-symbol = "🐍 "
-style = "green"
-
-[lua]
-symbol = "🌙 "
-style = "blue"
-
-[nodejs]
-symbol = " "
-style = "green"
-
-[rust]
-symbol = "🦀 "
-style = "red"
 
 # ── 命令耗时：超过 2s 才显示 ──
 [cmd_duration]
