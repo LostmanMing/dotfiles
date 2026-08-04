@@ -66,10 +66,29 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | 快捷键 | 功能 |
 |--------|------|
 | `prefix + S` | 新建 session |
-| `prefix + s` | session/窗口选择器 |
+| `prefix + s` | session/窗口选择器（行首带 AI 状态图标） |
+| `prefix + w` | 窗口选择器（行首带 AI 状态图标） |
 | `prefix + N` | 下一个 session |
 | `prefix + .` | 重命名 session |
 | `prefix + d` | detach |
+
+### AI 状态指示
+
+在跑 qodercli / Claude Code 的 pane 会显示状态图标：
+
+| 图标 | 含义 |
+|------|------|
+| `⚑` 黄（加粗） | **等你确认** —— 在问你问题或等权限批准 |
+| `✦` 蓝 | 进行中 |
+| `✓` 绿 | 已完成 / 空闲 |
+
+三处可见：
+
+1. **窗口名旁** —— 只反映**当前会话**，且取窗口的**活动 pane**；分屏且 AI pane 非活动时不显示
+2. **`prefix + w` / `prefix + s` 选择器行首** —— 跨会话，**会话行 / 窗口行 / pane 行都有**。会话行是该会话内所有 pane 的**聚合**，取最严重的一个（等你确认 > 进行中 > 已完成），所以会话里只要有一个窗口在等你确认，`prefix + s` 折叠着也能看到 `⚑`（聚合值由 `scripts/ai-status.sh` 每 `status-interval` 写进会话选项 `@ai_sess`）
+3. **底部状态条右侧** —— 形如 `⚑2 ✦1 ✓3`，**跨所有会话逐 pane 统计**，是唯一不受上面两条作用域限制的视图；没有 AI pane 时不显示
+
+状态来源：qodercli 原生就把状态写进 `pane_title`（还带任务摘要，所以选择器里能看出那个会话在干什么），刷新跟随 `status-interval`，最多滞后 2 秒；Claude Code 没有原生 title，由 hooks 调 `scripts/ai-state.sh` 写入，并立即刷新状态栏。
 
 ### Copy Mode
 
