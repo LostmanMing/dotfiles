@@ -56,6 +56,7 @@ command -v ruby || echo "请先安装 ruby"
 
 - **tmux-jump 报 `returned 127`**：多为 `ruby` 未安装，或插件未 `prefix + I` 安装到 `~/.tmux/plugins/tmux-jump`。先 `command -v ruby` 和 `ls ~/.tmux/plugins/tmux-jump`。
 - **TPM 插件全部静默不生效**：检查 `TMUX_PLUGIN_MANAGER_PATH`。配置在 XDG 路径（`~/.config/tmux/`）时 TPM 默认装到 `~/.config/tmux/plugins/`，与实际的 `~/.tmux/plugins/` 不一致会导致全部插件不加载。本配置已在 tmux.conf 里显式指定为 `~/.tmux/plugins/`。
+- **`git status` 里出现 tmux 插件文件**：老机器上若在显式指定 `TMUX_PLUGIN_MANAGER_PATH` 之前装过插件，`.config/tmux/plugins/` 会留下残留；而 `.config/tmux` 软链到本仓库，于是这些文件出现在 `git status` 里，并可能被 `ga`（`git add --all`）误提交。这些插件从未进入仓库历史，属于纯本地残留，直接删即可：`rm -rf <dotfiles>/.config/tmux/plugins`。仓库 `.gitignore` 已加 `.config/tmux/plugins/` 兜底。
 - **插件未生效**：改完 `@plugin` 后要先 `tmux source`，再 `prefix + I`。
 - **快捷键/配置改动**：`tmux source ~/.config/tmux/tmux.conf` 重载；部分选项（`set-clipboard`、`default-terminal`）对已存在 pane 不完全生效，可新开 pane 或 `tmux kill-server` 重启。
 

@@ -3,3 +3,10 @@
 **/bin/*
 __pycache__/
 .DS_Store
+
+# TPM 插件实际装在 ~/.tmux/plugins/（tmux.conf 里显式设了
+# TMUX_PLUGIN_MANAGER_PATH，否则配置放 XDG 路径时 TPM 会用
+# ~/.config/tmux/plugins/，那正好落在本仓库里）。
+# 这条是兜底：万一某台机器上该设置没生效（TPM 行为变化、或在 tmux.conf
+# 被 source 之前就按了 prefix+I），插件文件不会被 ga(git add --all) 误提交。
+.config/tmux/plugins/
