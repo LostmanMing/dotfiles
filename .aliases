@@ -51,14 +51,18 @@ alias ff='fastfetch'
 
 # ── Functions ──────────────────────────────────────────
 # 查别名：al git → 只列出含 git 的别名定义；无参数列全部（名字青色，对齐）
+# 输出按名字字母序，而非文件定义顺序。所有 git 别名都以 g 开头、非 git 的
+# （path/please/p/h/mi/ff）无一以 g 开头，所以字母序排完 git 那批自然连成一块。
+# 文件里的 daily/common/occasional 分区不体现在输出里，只在文件内可见。
+# 接 less -FRX：全量列出会超一屏，而 al gcl 这种两三行的结果直接打印、不分页。
 al() {
-    \grep '^alias ' ~/.aliases | \grep -i -- "${1:-.}" | while IFS= read -r line; do
+    \grep '^alias ' ~/.aliases | \grep -i -- "${1:-.}" | LC_ALL=C sort -t= -k1,1 | while IFS= read -r line; do
         line=${line#alias }
         name=${line%%=*}
         cmd=${line#*=}
         cmd=${cmd#\'}; cmd=${cmd%\'}
         printf '\033[1;36m%-8s\033[0m %s\n' "$name" "$cmd"
-    done
+    done | less -FRX
 }
 
 # universal archive extractor
