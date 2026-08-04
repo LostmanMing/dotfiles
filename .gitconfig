@@ -1,0 +1,28 @@
+# git 个人追加配置（只含跨机器该一致的部分，追加到本地 ~/.gitconfig）
+#
+# 不收录的两类，留在各机器本地：
+#   [user]  name/email —— 每人每机不同
+#   [http]  version = HTTP/1.1 —— 特定网络环境的兼容开关，不该无条件套用
+
+[core]
+	# delta 做分页器：语法高亮的 diff、词级差异、双列行号。
+	# || less -FRX 是回落——只写 delta 的话，一旦那台机器还没装 delta，
+	# git spawn 分页器失败后会静默降级成直接写终端：git log 把全部提交
+	# 一次性倾泻出来、屏幕停在最老那条，而且 git 连错误都不报，极难排查。
+	# 有了回落就退回 less，分页照常。
+	pager = delta || less -FRX
+
+[delta]
+	side-by-side = true      # 双栏对照；窄窗口下会挤，可临时 git -c delta.side-by-side=false
+	line-numbers = true      # 双列行号（旧 ⋮ 新）
+	navigate = true          # 分页器内 n/N 跳到下一个/上一个文件
+
+	# TwoDark 而非名字更像的 OneHalfDark：实测渲染同一份 diff 提取前景色，
+	# TwoDark 的 #abb2bf/#e06c75/#d19a66/#98c379/#61afef/#c678dd 六个色值
+	# 与 nvim 的 onedarkpro 完全一致；OneHalfDark 前景是 #dcdfe4，明显偏亮。
+	syntax-theme = TwoDark
+
+	# 强制真彩色。delta 靠 COLORTERM 环境变量判断，而 SSH + tmux 下它通常丢失，
+	# 于是 delta 降级到 256 色近似（38;5;176 这类），配色主题就白配了。
+	# 走这个开关不用污染 shell 环境变量。
+	true-color = always

@@ -32,16 +32,19 @@ nvim
 ```
 ~/dotfiles/
 ├── .config/
-│   ├── nvim/       → LostmanMing/dotfiles-nvim (submodule)
-│   ├── tmux/       → tmux config
-│   ├── lazygit/    → lazygit theme
-│   ├── aerospace/   → tiling WM
-│   └── sketchybar/  → status bar
-├── .claude/         → LostmanMing/dotfiles-claude (submodule)
-├── iterm2/          → iTerm2 profile
+│   ├── nvim/          → LostmanMing/dotfiles-nvim (submodule)
+│   ├── tmux/          → tmux config
+│   ├── clangd/        → clang-tidy 调整
+│   ├── aerospace/     → tiling WM
+│   ├── sketchybar/    → status bar
+│   └── starship.toml  → prompt (bash/zsh 共用)
+├── .claude/           → LostmanMing/dotfiles-claude (submodule)
+├── iterm2/            → iTerm2 profile
 ├── .zshrc
+├── .zprofile
 ├── .bashrc
 ├── .aliases
+├── .gitconfig         → git + delta（追加到本地）
 └── AGENTS.md
 ```
 
