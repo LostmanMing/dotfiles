@@ -1,13 +1,37 @@
 # starship 提示符配置（bash/zsh 共用）
 # 文档：https://starship.rs/config/
 # 风格：两行式、简洁字符风（无 powerline 色块）
+#
+# 配色对齐 nvim 的 onedarkpro。原先各段用 ANSI 命名色（green/cyan/yellow…），
+# 而 "bold + 基础 ANSI 色" 在多数终端会被渲染成亮色变体（输出是 1;32m 这类），
+# 整行因此偏亮。改用真彩色十六进制后颜色由配置决定，不再受终端调色板影响。
+# 同时去掉信息段的 bold——onedark 在编辑器里也是常规字重渲染这些颜色的；
+# bold 只留给输入符和 root 警示。
 
 add_newline = true   # 命令之间空一行
 
+palette = "onedark"
+
 # 第一行：SSH 主机标识 + 目录 + git + 语言版本 + 命令耗时；第二行：输入符
+# 注意：format/add_newline/palette 都是根级键，必须写在任何 [表头] 之前，
+# 否则会被 TOML 解析进上一个表（曾把 format 放到 [palettes.onedark] 之后，
+# 结果变成 palettes.onedark.format，根级 format 丢失、starship 回落默认格式）。
 format = """
 $username$hostname$directory$git_branch$git_status$c$cmake$python$lua$nodejs$rust$cmd_duration
 $character"""
+
+# 色值取自 onedarkpro 的实际高亮组。名字沿用 ANSI 色名以覆盖标准色，
+# 这样下面各段的 style 写法基本不用动。
+# eva_purple 是 lualine 里 git 分支用的初号机紫，让提示符和状态栏一致。
+[palettes.onedark]
+red = "#e06c75"
+yellow = "#e5c07b"
+green = "#98c379"
+cyan = "#56b6c2"
+blue = "#61afef"
+purple = "#c678dd"
+gray = "#7f848e"               # onedark 的注释色，给次要信息用
+eva_purple = "#9888d1"
 
 [character]
 success_symbol = "[❯](bold green)"
@@ -16,55 +40,55 @@ error_symbol = "[❯](bold red)"
 # ── 主机标识：仅 SSH 连接时显示 user@host，区分本地/远程 ──
 [username]
 format = "[$user]($style)[@](dim)"
-style_user = "bold yellow"
-style_root = "bold red"
+style_user = "yellow"
+style_root = "bold red"        # root 保留 bold：需要一眼看出是特权账户
 show_always = false           # 本地普通用户不显示（root/SSH 时显示）
 
 [hostname]
 ssh_only = true               # 只在 SSH 会话显示
 format = "[$hostname]($style) "
-style = "bold yellow"
+style = "yellow"
 
 # ── 目录 ──
 [directory]
 truncation_length = 4          # 最多显示 4 层
 truncate_to_repo = true        # git 仓库里从仓库根开始
-style = "bold cyan"
+style = "cyan"
 
 # ── git ──
 [git_branch]
 symbol = " "
-style = "bold purple"
+style = "eva_purple"           # 与 lualine 状态栏的分支色一致
 
 [git_status]
-style = "bold yellow"
+style = "yellow"
 
 # ── 语言版本：进入对应项目才显示 ──
 [c]
 symbol = "C "
-style = "bold blue"
+style = "blue"
 
 [cmake]
 symbol = "△ "
-style = "bold blue"
+style = "blue"
 
 [python]
 symbol = "🐍 "
-style = "bold green"
+style = "green"
 
 [lua]
 symbol = "🌙 "
-style = "bold blue"
+style = "blue"
 
 [nodejs]
 symbol = " "
-style = "bold green"
+style = "green"
 
 [rust]
 symbol = "🦀 "
-style = "bold red"
+style = "red"
 
 # ── 命令耗时：超过 2s 才显示 ──
 [cmd_duration]
 min_time = 2000
-style = "bold yellow"
+style = "gray"                 # 次要信息，用注释色让它退到背景
