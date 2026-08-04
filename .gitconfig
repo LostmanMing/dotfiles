@@ -26,3 +26,11 @@
 	# 于是 delta 降级到 256 色近似（38;5;176 这类），配色主题就白配了。
 	# 走这个开关不用污染 shell 环境变量。
 	true-color = always
+
+	# 行号可见性：delta 默认 line-numbers-zero-style = #444444，与背景 #282c34
+	# 对比度仅 1.44:1，未修改行的行号基本看不见（只有选中才知道那里有数字）。
+	# 换成 onedark 的 NonText #5c6370（2.32:1，清晰又不抢戏）。
+	# 分隔符 │ 默认是亮蓝、比行号本身还显眼，压到 LineNr #495162（1.76:1）让层次正确。
+	line-numbers-zero-style = "#5c6370"
+	line-numbers-left-style = "#495162"
+	line-numbers-right-style = "#495162"
