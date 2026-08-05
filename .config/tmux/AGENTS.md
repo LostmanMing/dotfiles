@@ -51,29 +51,35 @@ cd ~/.tmux/plugins/tmux-thumbs && cargo build --release
 # 6. 确保 ruby 在 PATH（tmux-jump 需要）
 command -v ruby || echo "请先安装 ruby"
 
-# 7. AI 状态指示：给两个脚本加可执行位（软链过来后权限可能丢）
-chmod +x ~/.config/tmux/scripts/ai-status.sh ~/.config/tmux/scripts/ai-state.sh
+# 7. AI 状态指示：给脚本加可执行位（软链过来后权限可能丢）
+chmod +x ~/.config/tmux/scripts/ai-status.sh
 ```
 
-### AI 状态指示的两个脚本
+### AI 状态指示
 
-- `scripts/ai-status.sh` —— 由 `status-right` 经 `#()` 调用，跨所有会话统计并输出 `⚑2 ✦1 ✓3`
-- `scripts/ai-state.sh` —— 由 **Claude Code 的 hooks** 调用，把状态写进 `pane_title`
+只有一个脚本：`scripts/ai-status.sh`，由 `status-right` 经 `#()` 每 `status-interval`（2s）调用一次。它做三件事：
 
-Claude Code 侧需在 `~/.claude/settings.json` 的 `hooks` 里挂 6 个事件（给已有事件**追加同级 group**，不要覆盖原有条目）：
+1. 读 `~/.claude/sessions/*.json` 采集 Claude Code 的状态，合成 `pane_title` 写回对应 pane
+2. 遍历所有 pane 统计三态，输出 `⚑2 ✦1 ✓3` 给 `status-right`
+3. 把每个会话的聚合状态（取最严重的）写进会话选项 `@ai_sess`，供 `prefix + s` 读取
 
-| 事件 | 参数 |
-|------|------|
-| `SessionStart` | `idle` |
-| `UserPromptSubmit` | `busy` |
-| `Notification` | `wait` |
-| `PostToolUse` | `busy` —— **必须有**，批准权限后 Claude 不会重新触发 `UserPromptSubmit`，缺了会一直停在 `⚑` 直到 `Stop` |
-| `Stop` | `idle` |
-| `SessionEnd` | `clear` |
+**两个 CLI 都零配置**，不需要在 Claude 或 qodercli 里挂任何 hook。
 
-命令形如 `AI_STATE_LABEL=Claude /path/to/scripts/ai-state.sh busy`，`timeout: 5`，**不要加 `async`**（脚本约 10ms，async 会引入竞态）。
+`pane_title` 是唯一的「线格式」，三个展示面只解析它的后缀：
 
-**qodercli 不要挂 hooks**：它原生的 `pane_title` 带任务摘要（如 `✦ 优化配置 | Working`），选择器里能直接看出会话在干什么；挂了 hooks 会把摘要覆盖成 `✦ qoder | Working`。代价只是状态刷新最多滞后一个 `status-interval`（2s）。
+| 状态 | title 后缀 |
+|------|-----------|
+| 等确认 | `\| Action Required` |
+| 进行中 | `\| Working` |
+| 已就绪 | `\| Ready` |
+
+qodercli 原生就这么写（还带任务摘要）；Claude 不写 title，由脚本代它合成 `◇ Claude <目录名> | Ready` 这种形式。
+
+**Claude 的 pid 怎么对上 pane**：`sessions/<pid>.json` 里的 `procStart` 实测就是 `/proc/<pid>/stat` 第 22 字段（starttime），拿它挡 pid 复用——进程没了或 starttime 不匹配就是陈文件。连接键是 tty，直接从 stat 的 `tty_nr` 纯算术解出 `/dev/pts/N`，再和 `#{pane_tty}` join，不 fork `readlink`。
+
+**为什么不用 hooks**：hook 有已证实的覆盖漏洞——按 `Esc` 打断、拒绝提问、关掉权限弹窗，这几种都不触发任何事件，状态会永久卡在 `⚑`。`sessions/*.json` 是 Claude 自己 UI 状态的镜像（fleetview 用的同一份数据），没有事件缺口。代价是最多滞后 2s，与 qodercli 一致。
+
+脚本给 Claude 的 pane 写 `@ai_state` 作为「我管着这个 pane」的标记：下次发现有标记但没有活着的 Claude，就把 `pane_title` 还原成主机名并清掉标记，避免死会话虚增计数。
 
 ## 排错
 

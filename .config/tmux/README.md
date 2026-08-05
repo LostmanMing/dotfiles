@@ -88,7 +88,7 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 2. **`prefix + w` / `prefix + s` 选择器行首** —— 跨会话，**会话行 / 窗口行 / pane 行都有**。会话行是该会话内所有 pane 的**聚合**，取最严重的一个（等你确认 > 进行中 > 已完成），所以会话里只要有一个窗口在等你确认，`prefix + s` 折叠着也能看到 `⚑`（聚合值由 `scripts/ai-status.sh` 每 `status-interval` 写进会话选项 `@ai_sess`）
 3. **底部状态条右侧** —— 形如 `⚑2 ✦1 ✓3`，**跨所有会话逐 pane 统计**，是唯一不受上面两条作用域限制的视图；没有 AI pane 时不显示
 
-状态来源：qodercli 原生就把状态写进 `pane_title`（还带任务摘要，所以选择器里能看出那个会话在干什么），刷新跟随 `status-interval`，最多滞后 2 秒；Claude Code 没有原生 title，由 hooks 调 `scripts/ai-state.sh` 写入，并立即刷新状态栏。
+状态来源：qodercli 原生就把状态写进 `pane_title`（还带任务摘要，所以选择器里能看出那个会话在干什么）；Claude Code 不写 title，由 `scripts/ai-status.sh` 读它自己的 `~/.claude/sessions/*.json` 代为合成。两者都零配置、不需要挂 hook，刷新跟随 `status-interval`，最多滞后 2 秒。
 
 ### Copy Mode
 
