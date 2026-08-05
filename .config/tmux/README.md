@@ -68,6 +68,7 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | `prefix + S` | 新建 session |
 | `prefix + s` | session/窗口选择器（行首带 AI 状态图标） |
 | `prefix + w` | 窗口选择器（行首带 AI 状态图标） |
+| `prefix + a` | **AI 会话选择器** —— 跨所有会话只列正在跑的 AI，模糊搜索 + 右侧实时预览 |
 | `prefix + N` | 下一个 session |
 | `prefix + .` | 重命名 session |
 | `prefix + d` | detach |
@@ -82,13 +83,46 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | `✦` 蓝 | 进行中 |
 | `✓` 绿 | 已完成 / 空闲 |
 
-三处可见：
+四处可见：
 
 1. **窗口名旁** —— 只反映**当前会话**，且取窗口的**活动 pane**；分屏且 AI pane 非活动时不显示
 2. **`prefix + w` / `prefix + s` 选择器行首** —— 跨会话，**会话行 / 窗口行 / pane 行都有**。会话行是该会话内所有 pane 的**聚合**，取最严重的一个（等你确认 > 进行中 > 已完成），所以会话里只要有一个窗口在等你确认，`prefix + s` 折叠着也能看到 `⚑`（聚合值由 `scripts/ai-status.sh` 每 `status-interval` 写进会话选项 `@ai_sess`）
 3. **底部状态条右侧** —— 形如 `⚑2 ✦1 ✓3`，**跨所有会话逐 pane 统计**，是唯一不受上面两条作用域限制的视图；没有 AI pane 时不显示
+4. **`prefix + a` 的 AI 会话选择器** —— 只列 AI，扁平一张表，`⚑` 自动置顶，右侧实时预览对方屏幕。见下
 
-状态来源：qodercli 原生就把状态写进 `pane_title`（还带任务摘要，所以选择器里能看出那个会话在干什么）；Claude Code 不写 title，由 `scripts/ai-status.sh` 读它自己的 `~/.claude/sessions/*.json` 代为合成。两者都零配置、不需要挂 hook，刷新跟随 `status-interval`，最多滞后 2 秒。
+状态来源：qodercli 把状态写在它自己的 `pane_title` 里；Claude Code 不写，但它自己维护 `~/.claude/sessions/*.json`（就是它 fleetview 用的那份）。`scripts/ai-status.sh` 每 `status-interval`（2 秒）把两边归一化后写进 pane 选项 `@ai_state`，上面四处读的都是它。两个 CLI 都**零配置**，不需要挂任何 hook。
+
+图标最多滞后 2 秒。**tmux 的 format 故意不直接读 `pane_title`** —— 标题是 CLI 自己的地盘（Claude 运行时会不停改写），我们插手就会互相覆盖，图标每 2 秒闪一次。
+
+### AI 会话选择器（`prefix + a`）
+
+满屏打开（不是弹窗），一行一个正在跑的 AI：
+
+```
+⚑ 等你确认   3d  work:1.1     ~/proj/api               改登录流程
+✓ 已就绪    16h  0:2.1        ~/proj/web               翻译上界与瓶颈分析
+✦ 进行中     0m  nvim:2.1     ~/dotfiles               AI 会话选择器
+```
+
+列依次是：状态 · 距上次活动多久 · `会话:窗口.面板` · 工作目录 · CLI 自己写的摘要。
+
+排序是**等你确认 → 已就绪 → 进行中**：被你卡着的排最前，还在跑的不用管所以垫底；同级按最近活动排。
+
+**vim 双模式**，进去是浏览态，不会一上来就抢你的按键：
+
+| 按键 | 浏览（normal） | 搜索（insert） |
+|------|---------------|---------------|
+| `j` / `k` | 上下移动 | 输入字符 |
+| `g` / `G` | 跳到首 / 尾 | 输入字符 |
+| `a` / `i` / `/` | **进搜索** | 输入字符 |
+| `esc` | 空操作（和 vim 一致） | **回浏览**，并清掉已输入的过滤词 |
+| `enter` | 跳到那个 pane | 同左 |
+| `q` | 退出 | 输入字符 |
+| `ctrl-c` | 退出 | 退出 |
+
+只有搜索态才会出现输入行；按键提示钉在最后一行，跟着模式变。右侧预览是对方 pane 的实时画面。
+
+需要 `fzf >= 0.59`（`apt` 上 Ubuntu 22.04 的 0.29 不够用，装法见 `AGENTS.md`）。
 
 ### Copy Mode
 
