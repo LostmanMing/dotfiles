@@ -68,7 +68,7 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 |------|------|------------|------------|
 | tmux | 3.2a（开发与验证版本） | `#{l:~}` 字面量修饰符、`choose-tree -Zw/-Zs` 的 `-F`、pane 作用域选项在 window 作用域解析到活动 pane | 图标全不显示，或 format 直接报错 |
 | fzf | **0.59**（实测装的是 0.74.2） | `--no-input` / `show-input` / `hide-input` —— vim 的 normal/insert 切换。另外还要 `rebind`（0.30 引入）和 `change-header`（0.40 引入），都被 0.59 覆盖 | fzf 吐一句参数错误就退出、pane 瞬间关掉，等于静默失败。`ai-pick.sh` 里有显式版本检查挡住这种情况 |
-| Claude Code | 实测 2.1.161 可用。`claude agents` 子命令的下限是 2.1.139，`sessions/*.json` 是它的后端，**推测**同批引入，未实测更早版本 | `~/.claude/sessions/<pid>.json` 的 `status` / `procStart` / `cwd` 字段 | Claude 的 pane 永远没图标，qodercli 不受影响 |
+| Claude Code | 实测 2.1.161 / 2.1.220 可用。`claude agents` 子命令的下限是 2.1.139，`sessions/*.json` 是它的后端，**推测**同批引入，未实测更早版本 | `~/.claude/sessions/<pid>.json` 的 `status` / `procStart` / `cwd` / `kind` 字段。**`kind` 缺失的记录会被整条丢弃**（照抄 Claude 自己的行为），所以更早版本若不写 `kind` 就全都不认 | Claude 的 pane 永远没图标，qodercli 不受影响 |
 | 平台 | Linux | `procStart` 与 `/proc/<pid>/stat` 第 22 字段（starttime）对齐、从 `tty_nr` 解 `/dev/pts/N` | macOS 上 Claude 侧完全失效 |
 | awk | mawk / gawk 均可 | 只用 POSIX 子集。但 mawk 的 `length`/`substr` 按**字节**算，所以代码里刻意不截断中文摘要、前导字形也显式列举而不用 `[^ ]` | 中文被截成半个字符 |
 | ruby | 任意 | tmux-jump 插件 | `prefix + Space s` 报 `returned 127` |
@@ -89,7 +89,14 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 状态来源：
 
 - **qodercli** 原生把状态写在 `pane_title` 里，后缀是 `| Working` / `| Action Required` / `| Ready`（还带任务摘要）
-- **Claude Code** 不写 title，但维护 `~/.claude/sessions/<pid>.json`（`status` 字段是 `idle|busy|waiting`），这是它 fleetview 用的同一份数据
+- **Claude Code** 不写 title，但维护 `~/.claude/sessions/<pid>.json`，这是它 fleetview 用的同一份数据。两个字段的处理都**照抄 Claude bundle 里它自己的逻辑**，别自己发明：
+
+  | 字段 | 全集 | 我们怎么处理 |
+  |------|------|------------|
+  | `status` | `["busy","shell","idle","waiting"]` | 只有 `idle` 和 `waiting` 是特例，**其余一律算「进行中」**（含 `shell`，即在 Claude 里跑 shell）。抄的是它的 `e==="idle"?"idle":e==="waiting"?"waiting":"busy"`。这样将来新增状态只会退化成进行中，不会整个 pane 没图标——`shell` 就曾这么漏掉过 |
+  | `kind` | `["interactive","bg","daemon","daemon-worker"]` | 只收 `interactive` 和**没有 `jobId` 的 `bg`**；`daemon` / `daemon-worker` 和**缺 `kind` 字段**的记录都丢。抄的是它列 agents 时的 `if (d.kind !== "interactive" && d.kind !== "bg") continue; if (d.kind === "bg" && d.jobId) continue;` |
+
+  不过滤 `kind` 的后果：一个 busy 的后台进程只要 tty 落在同一个 pane 上，就会盖掉那个 pane 里已经答完的交互会话——我们是按最严重聚合的。
 
 **铁律：我们绝不写 `pane_title`。** 曾经给 Claude 合成过标题，结果 Claude 自己也在写标题（设置项 `terminalTitleFromRename`），运行时每渲染一次就覆盖掉，我们每 2 秒抢回来 —— 底部标签的图标就一闪一闪。现在标题完全归 CLI 所有，我们只写自己的 `@ai_state`，没人能覆盖。tmux 的 format 也一律读 `@ai_state`，不读 `pane_title`。代价是图标最多滞后一个 `status-interval`。
 
@@ -119,7 +126,7 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
   4. `tmux list-windows -a -F '#{E:window-status-format}'` —— 看 format 是否还认得这个值
   5. `~/.config/tmux/scripts/ai-status.sh` —— 看计数输出
 
-  Claude 那一侧单独查：`ls ~/.claude/sessions/` 应该有活着的 `<pid>.json`，且 `status` 是 `idle|busy|waiting`。
+  Claude 那一侧单独查：`ls ~/.claude/sessions/` 应该有活着的 `<pid>.json`，且 `status` 是 `busy|shell|idle|waiting` 之一。
 
   若 `status-right` 显示 `<'...' not ready>`，说明聚合脚本卡住了（它里面不该有 `sleep`/网络/`tmux wait-for`）。注意：从一次性 CLI 客户端求值 `#()`（如 `tmux display -p '#{E:status-right}'`）**永远**返回 `not ready`，那是正常的——`#()` 的结果按客户端缓存，必须在真实附着的客户端上看。
 - **`prefix + a` 没反应**：会弹一条 `display-message` 说明原因 —— 没装 fzf、fzf 版本低于 0.59（apt 的 0.29 就是），或确实没有 AI 在跑。若提示「没有正在运行的 AI 会话」但明明有，按上一条查 `ai-panes.sh`。

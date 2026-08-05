@@ -60,14 +60,34 @@ claude_states=$(awk '
     }
     return ""
   }
-  function emit(buf,   pid, ps, raw, path, line, F, t, min, st, base) {
+  function emit(buf,   pid, ps, raw, kind, job, path, line, F, t, min, st, base) {
     pid = jnum(buf, "pid");   if (pid == "") return
     ps  = jstr(buf, "procStart")
     raw = jstr(buf, "status")
-    if      (raw == "waiting") st = "wait"
-    else if (raw == "busy")    st = "busy"
+    # kind 的全集是 ["interactive","bg","daemon","daemon-worker"]。过滤规则照抄
+    # Claude 自己列 agents 时的判断：
+    #   if (d.kind !== "interactive" && d.kind !== "bg") continue
+    #   if (d.kind === "bg" && d.jobId)                  continue
+    # 即只收 interactive 和「没有 jobId 的 bg」；daemon / daemon-worker 以及缺
+    # kind 字段的记录都丢掉（Claude 那边 undefined 也走 continue）。
+    # 不过滤的话，一个 busy 的后台进程只要 tty 落在同一个 pane 上，就会盖掉那个
+    # pane 里已经答完的交互会话——我们是按最严重聚合的。
+    kind = jstr(buf, "kind")
+    if (kind != "interactive" && kind != "bg") return
+    if (kind == "bg") {
+      job = jstr(buf, "jobId"); if (job == "") { job = jnum(buf, "jobId") }
+      if (job != "") return
+    }
+    # status 的全集在 Claude bundle 里是 ["busy","shell","idle","waiting"]，
+    # 而它自己的归一化函数就是「idle 和 waiting 是特例，其余算 busy」：
+    #   e === "idle" ? "idle" : e === "waiting" ? "waiting" : "busy"
+    # 照抄这个写法而不是枚举三个值——早先漏了 shell（Claude 里跑 shell 时的状态），
+    # 那种 pane 直接没图标。这样将来再加新状态也只会退化成「进行中」，不会消失。
+    # 但 status 缺失/为空仍要跳过：那不是一条可用的会话记录。
+    if      (raw == "")        return
     else if (raw == "idle")    st = "idle"
-    else                       return
+    else if (raw == "waiting") st = "wait"
+    else                       st = "busy"
     path = "/proc/" pid "/stat"
     if ((getline line < path) <= 0) { close(path); return }
     close(path)
