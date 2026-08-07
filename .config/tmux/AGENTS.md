@@ -13,7 +13,7 @@
 | tmux >= 3.2 | 终端复用器 | 需 3.1+ 才读 `~/.config/tmux/tmux.conf`；状态栏 `#{!=:...}` 等格式比较需 3.2+ |
 | Git | TPM 拉取插件 | 必须 |
 | TPM | 插件管理器 | `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm` |
-| 剪贴板 | **无需任何工具** | 全靠 `set-clipboard on` 的 OSC 52，不再探测 `xclip`/`pbcopy`。只有当某台机器的终端确实不认 OSC 52 时，才在那台机器本地加一行 `copy-pipe` 兜底 |
+| 剪贴板工具 | 视终端而定 | 复制走**两条并行**的路：`set-clipboard on` 的 OSC 52，加上探到的本地工具（`pbcopy`/`wl-copy`/`xclip`/`clip.exe`）。终端支持 OSC 52 就不需要工具；**不支持的话就得靠 SSH X11 转发 + `xclip`**（实测有这样的机器） |
 
 ### 插件依赖（按需）
 
@@ -77,13 +77,13 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 
 ### 剪贴板互通
 
-本地机器 ↔ 远程 tmux ↔ 远程 nvim 三方互通，**全靠 OSC 52，不依赖任何外部剪贴板工具**。tmux buffer 当中转站：
+本地机器 ↔ 远程 tmux ↔ 远程 nvim 三方互通。复制走**两条并行**的路，谁通算谁的；tmux buffer 当内部中转站：
 
 ```
-     nvim yank ──OSC52──┐
-                        ├─→ tmux 截获入 buffer ──OSC52 转发──→ 本地机器剪贴板
-     tmux 里按 y ───────┘         │
-                                  └──→ nvim 里 p 读 `tmux save-buffer -`
+  nvim yank ─┬─OSC52──→ tmux 截获入 buffer ──转发──→ 支持 OSC 52 的终端
+             └─工具───→ xclip/pbcopy/...（给不支持 OSC 52 的终端兜底）
+  tmux 按 y ─┬────────→ tmux buffer ──→ nvim 的 p 读 `tmux save-buffer -`
+             └─工具───→ 同上
 ```
 
 实测依据（都在隔离 socket 上用 `script` 录终端输出流验过）：
@@ -92,16 +92,13 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 |--------|------|
 | `set-clipboard on` 时内层程序发的 OSC 52 | **被 tmux 截获写进自己 buffer** |
 | `set-clipboard external` 时 | 只透传，**不入 buffer** —— nvim ↔ tmux 那条腿会断，**所以不能改成 external** |
-| `copy-selection`（不带 pipe） | 既入 buffer **又**往外发 OSC 52（录到序列并 base64 解码核对） |
+| `copy-selection`（不带 pipe） | 既入 buffer **又**往外发 OSC 52 |
+| `copy-pipe` 到一个必然失败的命令 | buffer **照样被填**、也照样留在 copy-mode —— 所以挂工具是纯增量，零代价 |
+| 某台机器的本地终端 | **不接受 OSC 52**，`printf '\033]52;...'` 到本地按 Cmd+V 拿不到东西 |
 
-**为什么删掉了 `@clipboard_cmd` 探测**：既然 `copy-selection` 单独就够，外部命令（`xclip`/`pbcopy`）纯属多余，反而带来三个问题——
+**为什么 `@clipboard_cmd` 探测必须留着**：曾经删过一次，理由是「`copy-selection` 单独就能发 OSC 52，外部工具多余」。结果那台终端不认 OSC 52 的机器**直接复制不出去**——它一直靠 SSH X11 转发 + `xclip`。**不要再删，也不要按 SSH 排除**（远程恰恰是最需要这条兜底的场景）。
 
-1. 误判：SSH 开 X11 转发时 `DISPLAY` 有值（`localhost:10.0`），但那个 X server 的剪贴板不是你本地机器的，写进去等于丢了
-2. 无 `DISPLAY` 的机器上曾被探测成 `xclip`，每次复制白跑一个报 `Can't open display` 的进程
-3. 它是 server 级全局选项，长期运行的 server 会留着旧值，reload 也清不掉
-
-需要兜底时（终端确实不认 OSC 52），在那台机器本地单独加一行即可：
-`bind -T copy-mode-vi y send-keys -X copy-pipe "xclip -selection clipboard"`
+判断上唯一要小心的是：**别拿 `DISPLAY` 做二选一**。以前 nvim 侧看到 `DISPLAY` 有值就只走 `xclip`、不发 OSC 52，那样两头都可能落空。现在两条并行，不再二选一。
 
 **`terminal-features` 必须先 `-gu` 再 `-as`**：`-as` 是追加，每次 `prefix + R` / `tmux source` 都再加一份，实测不加 `-gu` 连按两次就攒到 5 条（`terminal-overrides` 同理，历史上攒到过 `xterm*:Tc` ×19）。`-gu` 会恢复 tmux 自带的两条默认（`xterm*:clipboard:...` 和 `screen*:title`，其中 `clipboard` 正是 OSC 52 外发所需），要留着。
 

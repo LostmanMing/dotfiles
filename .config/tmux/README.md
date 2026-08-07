@@ -155,7 +155,12 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 
 **唯一的限制**：本地复制的内容，远程 normal 模式下 `p` 拿不到——那需要 OSC 52 **读**，绝大多数终端出于安全默认拒绝（iTerm2 有开关、WezTerm 可配、Windows Terminal 不支持）。直接按终端的 Cmd+V 即可，shell 和 nvim 插入模式都正常。
 
-不需要装 `xclip` / `pbcopy`，也不需要 X11 转发。
+复制会**同时**走两条路，谁通算谁的：`set-clipboard on` 的 OSC 52，加上探到的本地剪贴板工具（`pbcopy`/`wl-copy`/`xclip`/`clip.exe`）。
+
+- 终端支持 OSC 52（iTerm2 / WezTerm / kitty / Alacritty 等）→ 什么都不用装
+- 终端**不支持**（实测有这样的机器）→ 需要 SSH X11 转发 + `xclip`，并且本地跑着 XQuartz / VcXsrv 且开了剪贴板同步
+
+怎么判断自己属于哪种：跑 `printf '\033]52;c;%s\007' "$(printf 'TEST' | base64 | tr -d '\n')"`，然后本地按 Cmd+V。粘出 `TEST` 就是支持。
 
 ### Other
 
