@@ -133,8 +133,29 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | 开始选择 | `v` |
 | 行选择 | `V` |
 | 块选择 | `Ctrl+v` |
-| 复制 | `y` |
+| 复制 | `y` —— **复制后留在 copy-mode**，滚动位置不变，可以接着选下一段 |
 | 粘贴 | `prefix + P` |
+
+### 剪贴板互通
+
+本地机器（Mac/Win）SSH 到远程、远程开 tmux、tmux 里开 nvim，三者互通。全靠 OSC 52，tmux buffer 当中转站：
+
+```
+     nvim yank ──OSC52──┐
+                        ├─→ tmux 截获入 buffer ──OSC52 转发──→ 本地机器剪贴板
+     tmux 里按 y ───────┘         │
+                                  └──→ nvim 里 p 读 tmux buffer
+```
+
+| 在哪复制 | 本地 Cmd+V | tmux `prefix + P` | nvim `p` |
+|---------|-----------|------------------|---------|
+| nvim 里 `y` | ✅ | ✅ | ✅ |
+| tmux 里 `y` | ✅ | ✅ | ✅ |
+| 本地机器上复制 | — | ❌ | ❌ |
+
+**唯一的限制**：本地复制的内容，远程 normal 模式下 `p` 拿不到——那需要 OSC 52 **读**，绝大多数终端出于安全默认拒绝（iTerm2 有开关、WezTerm 可配、Windows Terminal 不支持）。直接按终端的 Cmd+V 即可，shell 和 nvim 插入模式都正常。
+
+不需要装 `xclip` / `pbcopy`，也不需要 X11 转发。
 
 ### Other
 

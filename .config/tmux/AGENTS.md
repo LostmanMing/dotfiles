@@ -13,7 +13,7 @@
 | tmux >= 3.2 | 终端复用器 | 需 3.1+ 才读 `~/.config/tmux/tmux.conf`；状态栏 `#{!=:...}` 等格式比较需 3.2+ |
 | Git | TPM 拉取插件 | 必须 |
 | TPM | 插件管理器 | `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm` |
-| 剪贴板工具 | 复制到系统剪贴板 | 启动时自动探测：mac 用 `pbcopy`，X11 用 `xclip`，WSL 用 `clip.exe` |
+| 剪贴板 | **无需任何工具** | 全靠 `set-clipboard on` 的 OSC 52，不再探测 `xclip`/`pbcopy`。只有当某台机器的终端确实不认 OSC 52 时，才在那台机器本地加一行 `copy-pipe` 兜底 |
 
 ### 插件依赖（按需）
 
@@ -66,13 +66,46 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 
 | 依赖 | 下限 | 卡在哪个特性 | 不满足会怎样 |
 |------|------|------------|------------|
-| tmux | 3.2a（开发与验证版本） | `#{l:~}` 字面量修饰符、`choose-tree -Zw/-Zs` 的 `-F`、pane 作用域选项在 window 作用域解析到活动 pane | 图标全不显示，或 format 直接报错 |
+| tmux | 3.2a（本机）/ next-3.8（另一台）—— **两个版本都在用** | `#{l:~}` 字面量修饰符、`choose-tree -Zw/-Zs` 的 `-F`、pane 作用域选项在 window 作用域解析到活动 pane、`terminal-features` 的 `RGB`/`usstyle`。已知 3.8 差异：`passthrough` 选项不存在（`tmux.conf:9` 有记） | 图标全不显示，或 format 直接报错 |
+| `tmux-256color` terminfo | 可选 | `default-terminal` 优先用它（有 `Smulx` undercurl 和斜体）；`if-shell` 探不到会自动退回 `xterm-256color` | 只是失去 undercurl / 斜体，其余照常 |
 | fzf | **0.59**（实测装的是 0.74.2） | `--no-input` / `show-input` / `hide-input` —— vim 的 normal/insert 切换。另外还要 `rebind`（0.30 引入）和 `change-header`（0.40 引入），都被 0.59 覆盖 | fzf 吐一句参数错误就退出、pane 瞬间关掉，等于静默失败。`ai-pick.sh` 里有显式版本检查挡住这种情况 |
 | Claude Code | 实测 2.1.161 / 2.1.220 可用。`claude agents` 子命令的下限是 2.1.139，`sessions/*.json` 是它的后端，**推测**同批引入，未实测更早版本 | `~/.claude/sessions/<pid>.json` 的 `status` / `procStart` / `cwd` / `kind` 字段。**`kind` 缺失的记录会被整条丢弃**（照抄 Claude 自己的行为），所以更早版本若不写 `kind` 就全都不认 | Claude 的 pane 永远没图标，qodercli 不受影响 |
 | 平台 | Linux | `procStart` 与 `/proc/<pid>/stat` 第 22 字段（starttime）对齐、从 `tty_nr` 解 `/dev/pts/N` | macOS 上 Claude 侧完全失效 |
 | awk | mawk / gawk 均可 | 只用 POSIX 子集。但 mawk 的 `length`/`substr` 按**字节**算，所以代码里刻意不截断中文摘要、前导字形也显式列举而不用 `[^ ]` | 中文被截成半个字符 |
 | ruby | 任意 | tmux-jump 插件 | `prefix + Space s` 报 `returned 127` |
 | cargo | 任意 | 编译 tmux-thumbs | `prefix + Space f` 不可用 |
+
+### 剪贴板互通
+
+本地机器 ↔ 远程 tmux ↔ 远程 nvim 三方互通，**全靠 OSC 52，不依赖任何外部剪贴板工具**。tmux buffer 当中转站：
+
+```
+     nvim yank ──OSC52──┐
+                        ├─→ tmux 截获入 buffer ──OSC52 转发──→ 本地机器剪贴板
+     tmux 里按 y ───────┘         │
+                                  └──→ nvim 里 p 读 `tmux save-buffer -`
+```
+
+实测依据（都在隔离 socket 上用 `script` 录终端输出流验过）：
+
+| 验证项 | 结果 |
+|--------|------|
+| `set-clipboard on` 时内层程序发的 OSC 52 | **被 tmux 截获写进自己 buffer** |
+| `set-clipboard external` 时 | 只透传，**不入 buffer** —— nvim ↔ tmux 那条腿会断，**所以不能改成 external** |
+| `copy-selection`（不带 pipe） | 既入 buffer **又**往外发 OSC 52（录到序列并 base64 解码核对） |
+
+**为什么删掉了 `@clipboard_cmd` 探测**：既然 `copy-selection` 单独就够，外部命令（`xclip`/`pbcopy`）纯属多余，反而带来三个问题——
+
+1. 误判：SSH 开 X11 转发时 `DISPLAY` 有值（`localhost:10.0`），但那个 X server 的剪贴板不是你本地机器的，写进去等于丢了
+2. 无 `DISPLAY` 的机器上曾被探测成 `xclip`，每次复制白跑一个报 `Can't open display` 的进程
+3. 它是 server 级全局选项，长期运行的 server 会留着旧值，reload 也清不掉
+
+需要兜底时（终端确实不认 OSC 52），在那台机器本地单独加一行即可：
+`bind -T copy-mode-vi y send-keys -X copy-pipe "xclip -selection clipboard"`
+
+**`terminal-features` 必须先 `-gu` 再 `-as`**：`-as` 是追加，每次 `prefix + R` / `tmux source` 都再加一份，实测不加 `-gu` 连按两次就攒到 5 条（`terminal-overrides` 同理，历史上攒到过 `xterm*:Tc` ×19）。`-gu` 会恢复 tmux 自带的两条默认（`xterm*:clipboard:...` 和 `screen*:title`，其中 `clipboard` 正是 OSC 52 外发所需），要留着。
+
+**本地 → 远程方向的限制**：normal 模式 `p` 拿不到本地剪贴板，那需要 OSC 52 **读**，绝大多数终端出于安全默认拒绝。用终端的 Cmd+V 即可（shell 和 nvim 插入模式正常）。nvim 侧刻意**不用** `vim.ui.clipboard.osc52` 的 `paste`——它等终端回应，runtime 源码里写死先等 1s 再等 9s，每次 `p` 都会卡住。
 
 ### AI 状态指示与选择器
 
