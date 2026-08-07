@@ -76,6 +76,11 @@ style = "eva_purple"           # 与 lualine 状态栏的分支色一致
 
 [git_status]
 style = "yellow"
+# 不遍历子模块：慢文件系统上这一项就是大头。某台 virtiofs 机器实测
+# `git status` 2.235s，加 `--ignore-submodules=all` 降到 0.659s——子模块占 71%，
+# 超过 command_timeout 后 starship 会刷出成片的 "git timed out" 警告。
+# 代价：子模块里有未提交改动时，提示符不再标记出来（父仓库自身的改动照常显示）。
+ignore_submodules = true
 
 # ── 命令耗时：超过 2s 才显示 ──
 [cmd_duration]
