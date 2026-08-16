@@ -2,20 +2,31 @@
 # 文档：https://starship.rs/config/
 # 风格：两行式、简洁字符风（无 powerline 色块）
 #
-# 配色对齐 nvim 的 onedarkpro。原先各段用 ANSI 命名色（green/cyan/yellow…），
-# 而 "bold + 基础 ANSI 色" 在多数终端会被渲染成亮色变体（输出是 1;32m 这类），
-# 整行因此偏亮。改用真彩色十六进制后颜色由配置决定，不再受终端调色板影响。
-# 同时去掉信息段的 bold——onedark 在编辑器里也是常规字重渲染这些颜色的；
-# bold 只留给输入符和 root 警示。
+# 配色是初号机（EVA-01）：色值从 dotfiles-nvim/scripts/eva01-source.png 直方图取样，
+# 与 nvim 启动页的 EVA 图、lualine 的分支色同一套。具体取值和为什么只用 4 个色，
+# 见下面 [palettes.onedark] 上方的注释。
+# 信息段一律不 bold——bold 只留给输入符和 root 警示；早先各段用 ANSI 命名色时，
+# "bold + 基础 ANSI 色" 在多数终端会被渲染成亮色变体（输出 1;32m 这类），整行偏亮。
+# 现在全部是真彩色十六进制，颜色由配置决定，不受终端调色板影响。
 
-add_newline = true   # 命令之间空一行
+# 提示符前不插空行。starship 默认 add_newline = true 会在每次提示符前多打一个空行，
+# 屏幕上每条命令之间都夹一行空白，翻历史时有效行数被砍掉近一半。
+add_newline = false
 
 palette = "onedark"
 
-# 外部命令超时。默认 500ms 在慢机器上偶发不够（git 扫大仓库状态时会抖一下），
-# 小幅抬到 1000 吸收抖动。不抬更高：抬高只是让 starship 等更久，不会让命令变快，
-# 超时设太长反而让提示符明显卡顿。真正的降耗手段是下面不求值语言版本模块。
-command_timeout = 1000
+# 扫描当前目录判断该启用哪些模块的超时。默认 30ms，抬到 100ms 给慢文件系统
+# （网络挂载 / virtiofs）多点余量：目录里文件多时 30ms 可能扫不完，导致某些
+# 按扩展名触发的模块偶发不显示。100ms 仍远低于人能感知的卡顿。
+scan_timeout = 100
+
+# 外部命令超时（主要卡在 git 扫状态）。用 starship 默认的 500ms。
+# 注意：这台机器够快没问题，但某台 virtiofs 机器实测 `git status`（已加
+# ignore_submodules）是 0.659s > 500ms——那台上 git 状态段会超时、可能刷
+# "git timed out"。真要在慢机器上稳住就把这里抬回 1000。
+# 抬高只是让 starship 多等，不会让命令变快，设太长反而让提示符明显卡顿；
+# 根本的降耗手段是下面不求值语言版本模块 + git_status 不遍历子模块。
+command_timeout = 500
 
 # 第一行：SSH 主机标识 + 目录 + git + 命令耗时；第二行：输入符
 # 注意：format/add_newline/palette 都是根级键，必须写在任何 [表头] 之前，
@@ -30,52 +41,113 @@ command_timeout = 1000
 # 回车都要付的。模块只要不出现在 format 里，starship 就完全不会求值，
 # 比逐个 disabled = true 更彻底。要恢复就把 $c$cmake$python$lua$nodejs$rust
 # 加回下面这行，并补上对应的 [c] [cmake] … 段（见 git 历史）。
+#
+# $git_state 的位置对齐 starship 默认 $all 的顺序（branch → state → status），
+# 放在 branch 之后、status 之前，读起来是"哪个分支、正在做什么、有什么改动"。
+# $status 放第二行开头，紧贴输入符，失败码就在你下一条命令的正上方。
+#
+# 布局：左边身份/目录/耗时，$fill 用虚线把中间撑开，git 三段推到行末右对齐。
+# $fill 会占满"左段"和"右段"之间的所有剩余列，所以窗口变宽时虚线自动变长、
+# git 始终贴着右边。cmd_duration 留在左边（它不是 git，且只在 >2s 时才出现）。
 format = """
-$username$hostname$directory$git_branch$git_status$cmd_duration
-$character"""
+$username$hostname$directory$cmd_duration $fill $git_branch$git_state$git_status
+$status$character"""
 
-# 色值取自 onedarkpro 的实际高亮组。名字沿用 ANSI 色名以覆盖标准色，
-# 这样下面各段的 style 写法基本不用动。
-# eva_purple 是 lualine 里 git 分支用的初号机紫，让提示符和状态栏一致。
+# 初号机（EVA-01）配色。色值不是凭感觉调的，是用 ImageMagick 从
+# dotfiles-nvim/scripts/eva01-source.png 直方图取的实际主色：
+#   #9685CF/#7B6CC0/#695F9C 机体紫、#DDC041 角与下颚黄、#54B565 装甲绿、
+#   #8D8FA6 中间灰紫。紫和黄取了 nvim 侧已在用的邻近值（#9888d1/#e3c645/#67a659），
+#   让提示符和 dashboard / lualine 分支色对得上。
+#
+# 为什么只用 4 个色：实测三个紫色明度之间 CIE Lab ΔE 只有 12.9~17.7（都低于 25），
+# 细窄的提示符段上根本分不开，所以不做"同色不同明度"的分层，一个紫只用一次。
+# 四色彼此 ΔE：紫↔灰紫 29.1，紫↔黄/绿 >29，黄↔绿 48.5，够分开。
+#
+# red 是唯一不在源图里的颜色，专留给错误（错误箭头 / 退出码 / root 警示）。
+# 这反而是优点：初号机配色里没有红，红出现就一定意味着出问题了，永不与正常段混淆。
+#
+# 段名沿用 ANSI 色名（red/yellow/green/gray）覆盖标准色，这样各段 style 写法不用动。
 [palettes.onedark]
-red = "#e06c75"
-yellow = "#e5c07b"
-green = "#98c379"
-cyan = "#56b6c2"
-blue = "#61afef"
-purple = "#c678dd"
-gray = "#7f848e"               # onedark 的注释色，给次要信息用
-eva_purple = "#9888d1"
+red = "#e06c75"                # 错误专用，源图里没有红
+yellow = "#e3c645"             # 角 / 下颚
+green = "#67a659"              # 装甲
+gray = "#8d8fa6"               # 源图中间灰紫，给次要信息用
+eva_purple = "#9888d1"         # 机体主色，给目录（与 nvim EVA 启动页同一支紫）
+fill_faint = "#4b5263"         # 只给中间填充：比 gray 更暗，仅比底色亮一档，退成背景纹理
 
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
 
+# ── 中间填充：把 git 段推到行末右对齐 ──
+# symbol 是 U+00B7（· 居中点），当引导点用——比实线细分割线轻、比 ┈ 四点划线均匀，
+# 不铺成噪点。颜色用专门的 fill_faint（比 gray 更暗），让点线退成背景纹理、不抢视线。
+# 默认 symbol 是 "." 且 style 是 bold black，在深色背景上几乎看不见，所以两个都覆盖。
+# format 里 $fill 两侧各留一个空格，避免圆点和目录 / "on" 贴死。
+[fill]
+symbol = "·"
+style = "fill_faint"
+
 # ── 主机标识：仅 SSH 连接时显示 user@host，区分本地/远程 ──
 [username]
 format = "[$user]($style)[@](dim)"
-style_user = "yellow"
+style_user = "gray"
 style_root = "bold red"        # root 保留 bold：需要一眼看出是特权账户
 show_always = false           # 本地普通用户不显示（root/SSH 时显示）
 
 [hostname]
 ssh_only = true               # 只在 SSH 会话显示
 format = "[$hostname]($style) "
-style = "yellow"
+style = "gray"
 
 # ── 目录 ──
 [directory]
 truncation_length = 4          # 最多显示 4 层
 truncate_to_repo = true        # git 仓库里从仓库根开始
-style = "cyan"
+style = "eva_purple"           # 机体主色：目录是永远存在、看得最多的段
+# 前缀文件夹图标 （nf-fa-folder），只读目录追加锁 󰌾（nf-md-lock，取自预设）。
+# 都是 Nerd Font 私用区字符，改这行同样别被工具/粘贴吃掉。
+format = "[ ]($style)[$path]($style)[$read_only]($read_only_style) "
+read_only = " 󰌾"
+read_only_style = "red"
 
 # ── git ──
+# symbol 里那个字符是 U+E0A0（Nerd Font / Powerline 的分支图标），不是普通空格。
+# 曾经丢成 symbol = " "（引号里只剩一个 ASCII 空格），提示符上就只剩 "on   main"
+# 的空隙、没有图标——查 git 历史最近 8 个 commit 都是坏的。改这行时注意别被
+# 编辑器或复制粘贴吃掉这个私用区字符，校验：
+#   grep -A1 '^\[git_branch\]' starship.toml | grep symbol | od -c   → 应有 356 202 240
 [git_branch]
-symbol = " "
-style = "eva_purple"           # 与 lualine 状态栏的分支色一致
+symbol = " "   # U+E0A0，校验方法见上面注释
+style = "green"                # 装甲绿，与 lualine 状态栏的分支色一致
+
+# ── git 中间状态：rebase / merge / cherry-pick / bisect / revert ──
+# 默认就启用，之前只是没写进 format，所以 rebase 中断时提示符毫无表示。
+# 零成本：读 .git 下的状态文件，不 fork 进程。
+# 和下面 git_status 同用角黄：初号机配色只有 4 个能分开的色，这两段必须共用一个。
+# 共用不影响辨认——git_state 是 (REBASING 2/5) 圆括号，git_status 是 [!] 方括号，
+# 靠结构而不是颜色区分，且 git_state 平时根本不出现。
+[git_state]
+style = "yellow"
 
 [git_status]
-style = "yellow"
+# 默认把所有改动挤成一个 [!]/[?]，看不出是哪类。这里按类别给不同图标+颜色，
+# 每类只在计数 >0 时出现（$count 由 starship 填），语义色沿用全局约定：
+#   绿=已暂存(好了)  黄=改过/重命名(待处理)  灰=未跟踪  红=删除/冲突(危险)
+#   紫=stash  领先/落后箭头用灰(信息性)。图标是 Nerd Font 私用区，勿被工具吃掉。
+# 每个键自带 [..](色)，不靠外层 style 统一上色；format 里 [...] 只是分组、不出字面括号。
+format = "([$conflicted$staged$modified$renamed$deleted$untracked$stashed$ahead_behind]($style) )"
+style = "gray"
+staged     = "[ $count](green)"
+modified   = "[ $count](yellow)"
+renamed    = "[»$count](yellow)"
+untracked  = "[ $count](gray)"
+deleted    = "[✘$count](red)"
+conflicted = "[=$count](red)"
+stashed    = "[≡$count](eva_purple)"
+ahead      = "⇡$count"
+behind     = "⇣$count"
+diverged   = "⇕⇡$ahead_count⇣$behind_count"
 # 不遍历子模块：慢文件系统上这一项就是大头。某台 virtiofs 机器实测
 # `git status` 2.235s，加 `--ignore-submodules=all` 降到 0.659s——子模块占 71%，
 # 超过 command_timeout 后 starship 会刷出成片的 "git timed out" 警告。
@@ -85,4 +157,18 @@ ignore_submodules = true
 # ── 命令耗时：超过 2s 才显示 ──
 [cmd_duration]
 min_time = 2000
-style = "gray"                 # 次要信息，用注释色让它退到背景
+style = "gray"                 # 次要信息，用源图的中间灰紫让它退到背景
+# 默认 format 是 "took [$duration]"，把英文 took 换成沙漏图标 （nf-fa-hourglass-half）
+format = " [$duration]($style) "
+
+# ── 上一条命令的退出码 ──
+# 这个模块默认 disabled = true，必须显式打开（光加进 format 不够）。
+# 之前只有 [character] 的箭头变红，能看出"错了"但看不出错在哪；退出码能区分
+# 127 命令不存在 / 130 Ctrl+C / 137 被 OOM kill / 1 普通失败。
+# success_symbol 默认为空，所以成功时这一段完全不占位，不会挤到输入符。
+# 符号用 ✘ 而不是默认的 ❌ emoji：这套提示符是纯字符风，emoji 宽度还依赖终端。
+# 不 bold，遵循本文件的约定（bold 只留给输入符和 root 警示）。
+[status]
+disabled = false
+symbol = "✘ "
+style = "red"

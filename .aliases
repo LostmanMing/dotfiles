@@ -49,11 +49,13 @@ alias p='python'
 alias h='history | tail'
 alias mi='make -j$(nproc) && make install'
 alias ff='fastfetch'
+# 清屏（Windows 习惯名；也可直接 Ctrl+L）
+alias cls='clear'
 
 # ── Functions ──────────────────────────────────────────
 # 查别名：al git → 只列出含 git 的别名定义；无参数列全部（名字青色，对齐）
 # 输出按名字字母序，而非文件定义顺序。所有 git 别名都以 g 开头、非 git 的
-# （path/please/p/h/mi/ff）无一以 g 开头，所以字母序排完 git 那批自然连成一块。
+# （path/please/p/h/mi/ff/cls）无一以 g 开头，所以字母序排完 git 那批自然连成一块。
 # 文件里的 daily/common/occasional 分区不体现在输出里，只在文件内可见。
 # 接 less -FRX：全量列出会超一屏，而 al gcl 这种两三行的结果直接打印、不分页。
 al() {
