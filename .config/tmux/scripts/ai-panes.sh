@@ -32,6 +32,9 @@ command -v tmux >/dev/null 2>&1 || exit 0
 
 claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
+# macOS 没有 /proc，Claude 的 pid -> tty 解析改走 ps 分支（见 emit() 的 mac 段）
+ismac=0; [ "$(uname -s)" = "Darwin" ] && ismac=1
+
 # ---- Claude Code: sessions/*.json -> "tty 状态 目录名" ----
 #
 # 每个交互式 Claude 进程写一个 <pid>.json，正常退出时自删。字段：
@@ -46,7 +49,7 @@ claude_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 #          注意掩码是移位**之后**的 0xfff00，不是 0xfff —— 写成 0xfff 会把
 #          /dev/pts/14 算成 2062（踩过）
 # 只认 major 136（pts）：tty1 之类的物理终端不可能是 tmux pane。
-claude_states=$(awk '
+claude_states=$(awk -v mac="$ismac" '
   function jnum(s, k,   v) {
     if (match(s, "\"" k "\"[ ]*:[ ]*-?[0-9]+")) {
       v = substr(s, RSTART, RLENGTH); sub(/^.*:[ ]*/, "", v); return v
@@ -60,7 +63,7 @@ claude_states=$(awk '
     }
     return ""
   }
-  function emit(buf,   pid, ps, raw, kind, job, path, line, F, t, min, st, base) {
+  function emit(buf,   pid, ps, raw, kind, job, path, line, F, t, min, st, base, tty, pscmd) {
     pid = jnum(buf, "pid");   if (pid == "") return
     ps  = jstr(buf, "procStart")
     raw = jstr(buf, "status")
@@ -88,18 +91,31 @@ claude_states=$(awk '
     else if (raw == "idle")    st = "idle"
     else if (raw == "waiting") st = "wait"
     else                       st = "busy"
-    path = "/proc/" pid "/stat"
-    if ((getline line < path) <= 0) { close(path); return }
-    close(path)
-    sub(/^[^ ]+ \(.*\) /, "", line)     # comm 可能含空格，整段剥掉；字段左移 2
-    split(line, F, " ")
-    if (ps != "" && F[20] != ps) return
-    t = F[5] + 0
-    if (int(t / 256) % 256 != 136) return
-    min = t % 256 + (int(t / 1048576) % 4096) * 256
     base = jstr(buf, "cwd"); sub(/.*\//, "", base)
     gsub(/[^A-Za-z0-9._-]/, "", base)
-    printf "/dev/pts/%d %s %s\n", min, st, base
+    if (mac) {
+      # macOS 没有 /proc：用 ps -p <pid> -o tty= 拿 tty（ttys001），拼成
+      # /dev/ttys001 与 pane_tty 对齐。procStart（Linux 时钟节拍）没有对应物，
+      # 防陈旧文件改为「ps 查不到进程即 return」——进程活着才会出现在 ps 里，
+      # pid 复用或进程已退的旧 JSON 都走不到 printf。
+      pscmd = "ps -p " pid " -o tty= 2>/dev/null"
+      if ((pscmd | getline tty) <= 0) { close(pscmd); return }
+      close(pscmd)
+      gsub(/^[ \t]+|[ \t]+$/, "", tty)
+      if (tty == "") return
+      printf "/dev/%s %s %s\n", tty, st, base
+    } else {
+      path = "/proc/" pid "/stat"
+      if ((getline line < path) <= 0) { close(path); return }
+      close(path)
+      sub(/^[^ ]+ \(.*\) /, "", line)     # comm 可能含空格，整段剥掉；字段左移 2
+      split(line, F, " ")
+      if (ps != "" && F[20] != ps) return
+      t = F[5] + 0
+      if (int(t / 256) % 256 != 136) return
+      min = t % 256 + (int(t / 1048576) % 4096) * 256
+      printf "/dev/pts/%d %s %s\n", min, st, base
+    }
   }
   FNR == 1 && buf != "" { emit(buf); buf = "" }
   { buf = buf $0 }

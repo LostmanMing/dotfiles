@@ -131,6 +131,9 @@ export PATH="/usr/local/bin:$PATH"
 export PATH=/Users/zhaogm/.opencode/bin:$PATH
 export PATH="$HOME/.local/bin:$PATH"
 
+# npm 全局包（dsh 等）
+export PATH="$HOME/.npm-global/bin:$PATH"
+
 # 所有 cmake 构建自动生成 compile_commands.json（clangd 找头文件用，CMake ≥3.17）
 export CMAKE_EXPORT_COMPILE_COMMANDS=1
 

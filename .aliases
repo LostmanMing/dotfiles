@@ -44,6 +44,7 @@ alias gsmu='git submodule update --init --recursive'
 alias g='git'
 
 # ── Misc ───────────────────────────────────────────────
+alias dsh-tui='dsh --profile tui'
 alias p='python'
 alias h='history | tail'
 alias mi='make -j$(nproc) && make install'
