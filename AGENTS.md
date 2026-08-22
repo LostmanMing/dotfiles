@@ -46,6 +46,29 @@ bash ~/.claude/setup.sh deepseek    # 输入 API Key
 
 本仓库只保存个人追加配置，不全量覆盖。使用时**追加**到本地已有配置。
 
+### 依赖
+
+Ubuntu/Debian：
+
+```bash
+apt-get update
+apt-get install -y bash-completion fzf zoxide gawk git make
+```
+
+Bash 的现代输入体验依赖 `ble.sh`（自动建议、语法高亮、补全增强），需要单独下载安装：
+
+```bash
+mkdir -p ~/Codes/repos
+git clone --depth 1 https://github.com/akinomyoga/ble.sh.git ~/Codes/repos/ble.sh
+make -C ~/Codes/repos/ble.sh install PREFIX="$HOME/.local"
+```
+
+`.bashrc` 已写成条件加载：如果 `~/.local/share/blesh/ble.sh` 不存在，不会影响 Bash 启动。
+
+`zoxide` 只初始化 `z` 命令，不把 `cd` 强制替换成函数；如需智能跳转用 `z <关键词>`。Ubuntu 22.04 apt 里的 `zoxide 0.4.3` 不要用 `zoxide init bash --cmd cd`，会导致 `cd` 递归卡住。
+
+### 安装
+
 先确认当前终端类型（`echo $SHELL`），选择对应文件：
 
 ```bash

@@ -1,6 +1,20 @@
 # ── Shell ─────────────────────────────────────────────
 alias path='echo -e ${PATH//:/\\n}'
 alias please='sudo $(history -p !!)'
+alias sb='source ~/.bashrc'
+alias sz='source ~/.zshrc'
+alias sa='source ~/.aliases'
+
+reload_shell() {
+    if [ -n "${ZSH_VERSION:-}" ]; then
+        source ~/.zshrc
+    elif [ -n "${BASH_VERSION:-}" ]; then
+        source ~/.bashrc
+    else
+        source ~/.profile
+    fi
+}
+alias sr='reload_shell'
 
 # ── Git (daily) ────────────────────────────────────────
 alias gs='git status'

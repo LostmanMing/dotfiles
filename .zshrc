@@ -87,12 +87,9 @@ source ~/Codes/repos/znap/znap.zsh
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
 
-# Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='nvim'
-# fi
+# Preferred editor
+export EDITOR='nvim'
+export VISUAL='nvim'
 
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
@@ -140,6 +137,12 @@ export CMAKE_EXPORT_COMPILE_COMMANDS=1
 # aliases (shared with bash)
 [[ -f ~/.aliases ]] && . ~/.aliases
 
+# fzf
+[[ -r /usr/share/doc/fzf/examples/completion.zsh ]] && source /usr/share/doc/fzf/examples/completion.zsh
+[[ -r /usr/share/doc/fzf/examples/key-bindings.zsh ]] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+
+# directory jumping
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
 # starship 提示符（配置 ~/.config/starship.toml，与 bash 共用）；未安装则用 omz 默认主题
 command -v starship >/dev/null && eval "$(starship init zsh)"
