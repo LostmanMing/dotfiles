@@ -5,6 +5,24 @@ alias sb='source ~/.bashrc'
 alias sz='source ~/.zshrc'
 alias sa='source ~/.aliases'
 
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --icons=auto --group-directories-first'
+    alias ll='eza -alF --icons=auto --git --group-directories-first'
+    alias la='eza -a --icons=auto --git --group-directories-first'
+    alias l='eza -F --icons=auto --group-directories-first'
+    alias tree='eza --tree --icons=auto --git --group-directories-first'
+fi
+
+if command -v batcat >/dev/null 2>&1; then
+    alias bat='batcat'
+    alias cat='batcat'
+elif command -v bat >/dev/null 2>&1; then
+    alias cat='bat'
+fi
+
+command -v rg >/dev/null 2>&1 && alias grep='rg'
+command -v fdfind >/dev/null 2>&1 && alias fd='fdfind'
+
 reload_shell() {
     if [ -n "${ZSH_VERSION:-}" ]; then
         source ~/.zshrc

@@ -52,8 +52,17 @@ Ubuntu/Debian：
 
 ```bash
 apt-get update
-apt-get install -y bash-completion fzf zoxide gawk git make
+apt-get install -y bash-completion fzf zoxide gawk git make fd-find ripgrep bat file tree
 ```
+
+Ubuntu 22.04 apt 没有 `eza`，需要先有 Cargo/Rust 工具链，再用 Cargo 安装：
+
+```bash
+cargo install eza --locked
+cargo install vivid --locked
+```
+
+`vivid` 可用于手动生成 `LS_COLORS`，但当前配置不用 vivid 主题，避免文件名颜色过多；只区分目录、普通文件、可执行文件三类。`EZA_COLORS` 也保持低对比度，避免 `ll` 的 metadata 列太花。默认 vivid 主题列表里没有 `eva`。Ubuntu 的 `bat` 命令名是 `batcat`，`.aliases` 会自动把 `bat` 和 `cat` 映射到可用命令。
 
 Bash 的现代输入体验依赖 `ble.sh`（自动建议、语法高亮、补全增强），需要单独下载安装：
 
@@ -63,7 +72,7 @@ git clone --depth 1 https://github.com/akinomyoga/ble.sh.git ~/Codes/repos/ble.s
 make -C ~/Codes/repos/ble.sh install PREFIX="$HOME/.local"
 ```
 
-`.bashrc` 已写成条件加载：如果 `~/.local/share/blesh/ble.sh` 不存在，不会影响 Bash 启动。
+`.bashrc` 已写成条件加载：如果 `~/.local/share/blesh/ble.sh` 不存在，不会影响 Bash 启动。启用 `ble.sh` 时，fzf 的 `**<Tab>` 补全和快捷键必须通过 `~/.blerc` 里的 `ble-import -d integration/fzf-completion` / `fzf-key-bindings` 接入；不要在这种情况下直接 `eval "$(fzf --bash)"`，否则会被 `ble.sh` 接管后失效。
 
 `zoxide` 只初始化 `z` 命令，不把 `cd` 强制替换成函数；如需智能跳转用 `z <关键词>`。Ubuntu 22.04 apt 里的 `zoxide 0.4.3` 不要用 `zoxide init bash --cmd cd`，会导致 `cd` 递归卡住。
 
@@ -80,6 +89,9 @@ cat ~/dotfiles/.bashrc >> ~/.bashrc
 
 # 通用别名（软链，bash/zsh 共用）
 ln -sf ~/dotfiles/.aliases ~/.aliases
+
+# ble.sh 配色（bash 自动建议/补全菜单，灰色主题）
+ln -sf ~/dotfiles/.blerc ~/.blerc
 
 # starship 提示符配置（bash/zsh 统一使用，p10k 已移除）
 ln -sf ~/dotfiles/.config/starship.toml ~/.config/starship.toml

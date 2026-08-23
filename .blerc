@@ -1,0 +1,19 @@
+# ble.sh theme tweaks
+ble-face -s auto_complete fg=244
+ble-face -s menu_complete_selected fg=252,bg=238
+ble-face -s menu_complete_match fg=250,bold
+ble-face -s menu_filter_input fg=252,bg=238
+ble-face -s menu_filter_fixed fg=250,bold
+
+# vi mode
+set -o vi
+bleopt keymap_vi_mode_show:=
+ble-bind -m vi_nmap --cursor 2
+ble-bind -m vi_imap --cursor 5
+ble-bind -m vi_omap --cursor 4
+ble-bind -m vi_xmap --cursor 2
+ble-bind -m vi_smap --cursor 2
+
+# fzf integration
+ble-import integration/fzf-completion
+ble-import integration/fzf-key-bindings
