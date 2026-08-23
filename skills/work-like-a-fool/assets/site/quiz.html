@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>能力测评 · __TITLE__</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero" id="topic"></header>
+
+<div class="card">
+  <h2>这条链路长什么样</h2>
+  <p class="muted">测评的各个维度分别对应链路上的一段：</p>
+  <pre class="out" id="chain">__CHAIN__</pre>
+</div>
+
+<div class="card">
+  <h2>Part 1 · 选择题</h2>
+  <p class="muted">不要查资料，凭直觉答；不确定的直接留空 —— 留空对判断你的知识边界更有价值。提交后每题会展开解析。</p>
+  <div id="quiz"></div>
+</div>
+
+<div class="card">
+  <h2>Part 2 · 自评</h2>
+  <div id="self"></div>
+</div>
+
+<div class="card">
+  <h2>Part 3 · 你的实际处境</h2>
+  <div id="ctx"></div>
+  <div class="actions">
+    <button id="submit">提交并查看解析</button>
+    <span class="muted">提交后本页会展开全部答案解析</span>
+  </div>
+</div>
+
+<div class="card hidden" id="result">
+  <h2>测评结果</h2>
+  <p>起点档位：<b id="band"></b></p>
+  <div id="scores"></div>
+  <h3>把下面这段发回给 AI</h3>
+  <p class="muted">AI 会据此生成后续课程页面：补齐薄弱环节、跳过已掌握的部分、并把练习换成能在你环境里跑的代码。</p>
+  <pre class="out" id="profile"></pre>
+  <div class="actions">
+    <button id="copybtn">复制结果</button>
+    <button class="ghost" onclick="window.scrollTo({top:0,behavior:'smooth'})">回到顶部看解析</button>
+  </div>
+</div>
+
+<div class="pager"></div>
+<footer>本地静态页面，无网络请求。答案与结果只存在浏览器 localStorage 中。</footer>
+</div>
+<script src="assets/pages.js"></script>
+<script src="assets/nav.js"></script>
+<script src="assets/questions.js"></script>
+<script src="assets/quiz.js"></script>
+</body>
+</html>
