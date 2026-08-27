@@ -72,7 +72,7 @@ git clone --depth 1 https://github.com/akinomyoga/ble.sh.git ~/Codes/repos/ble.s
 make -C ~/Codes/repos/ble.sh install PREFIX="$HOME/.local"
 ```
 
-`.bashrc` 已写成条件加载：如果 `~/.local/share/blesh/ble.sh` 不存在，不会影响 Bash 启动。启用 `ble.sh` 时，fzf 的 `**<Tab>` 补全和快捷键必须通过 `~/.blerc` 里的 `ble-import -d integration/fzf-completion` / `fzf-key-bindings` 接入；不要在这种情况下直接 `eval "$(fzf --bash)"`，否则会被 `ble.sh` 接管后失效。
+`.bashrc` 已写成条件加载：如果 `~/.local/share/blesh/ble.sh` 不存在，不会影响 Bash 启动。启用 `ble.sh` 时，fzf 的 `**<Tab>` 补全和快捷键必须通过 `~/.blerc` 里的 `ble-import integration/fzf-completion` / `ble-import integration/fzf-key-bindings` 接入；不要在这种情况下直接 `eval "$(fzf --bash)"`，否则会被 `ble.sh` 接管后失效。
 
 `zoxide` 只初始化 `z` 命令，不把 `cd` 强制替换成函数；如需智能跳转用 `z <关键词>`。Ubuntu 22.04 apt 里的 `zoxide 0.4.3` 不要用 `zoxide init bash --cmd cd`，会导致 `cd` 递归卡住。
 
