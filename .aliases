@@ -6,11 +6,11 @@ alias sz='source ~/.zshrc'
 alias sa='source ~/.aliases'
 
 if command -v eza >/dev/null 2>&1; then
-    alias ls='eza --icons=auto --group-directories-first'
-    alias ll='eza -alF --icons=auto --git --group-directories-first'
-    alias la='eza -a --icons=auto --git --group-directories-first'
-    alias l='eza -F --icons=auto --group-directories-first'
-    alias tree='eza --tree --icons=auto --git --group-directories-first'
+    alias ls='eza --color=auto --icons=auto --group-directories-first'
+    alias ll='eza -alF --color=auto --icons=auto --git --group-directories-first'
+    alias la='eza -a --color=auto --icons=auto --git --group-directories-first'
+    alias l='eza -F --color=auto --icons=auto --group-directories-first'
+    alias tree='eza --tree --color=auto --icons=auto --git --group-directories-first'
 fi
 
 if command -v batcat >/dev/null 2>&1; then

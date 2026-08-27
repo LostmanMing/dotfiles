@@ -1,4 +1,7 @@
-# ble.sh theme tweaks
+# ble.sh minimal colors
+bleopt highlight_syntax=
+bleopt highlight_filename=
+bleopt highlight_variable=
 ble-face -s auto_complete fg=244
 ble-face -s menu_complete_selected fg=252,bg=238
 ble-face -s menu_complete_match fg=250,bold

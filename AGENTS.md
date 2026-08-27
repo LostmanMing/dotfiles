@@ -62,7 +62,7 @@ cargo install eza --locked
 cargo install vivid --locked
 ```
 
-`vivid` 可用于手动生成 `LS_COLORS`，但当前配置不用 vivid 主题，避免文件名颜色过多；只区分目录、普通文件、可执行文件三类。`EZA_COLORS` 也保持低对比度，避免 `ll` 的 metadata 列太花。默认 vivid 主题列表里没有 `eva`。Ubuntu 的 `bat` 命令名是 `batcat`，`.aliases` 会自动把 `bat` 和 `cat` 映射到可用命令。
+`vivid` 可用于手动生成 `LS_COLORS`，但当前配置不用 vivid 主题，避免文件名颜色过多；`LS_COLORS` 只区分目录、普通文件、可执行文件，`EZA_COLORS` 只把目录/可执行文件和少量 metadata/git 状态压到低对比颜色，`ls` / `ll` / `la` / `l` / `tree` 用 `eza --color=auto`。默认 vivid 主题列表里没有 `eva`。Ubuntu 的 `bat` 命令名是 `batcat`，`.aliases` 会自动把 `bat` 和 `cat` 映射到可用命令。
 
 Bash 的现代输入体验依赖 `ble.sh`（自动建议、语法高亮、补全增强），需要单独下载安装：
 
@@ -90,7 +90,7 @@ cat ~/dotfiles/.bashrc >> ~/.bashrc
 # 通用别名（软链，bash/zsh 共用）
 ln -sf ~/dotfiles/.aliases ~/.aliases
 
-# ble.sh 配色（bash 自动建议/补全菜单，灰色主题）
+# ble.sh 极简配色（关闭语法/文件名/变量类型高亮，只保留灰色自动建议和补全菜单）
 ln -sf ~/dotfiles/.blerc ~/.blerc
 
 # starship 提示符配置（bash/zsh 统一使用，p10k 已移除）
