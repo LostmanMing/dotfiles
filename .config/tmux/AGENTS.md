@@ -10,7 +10,10 @@
 
 | 软件 | 用途 | 备注 |
 |------|------|------|
-| tmux >= 3.2 | 终端复用器 | 需 3.1+ 才读 `~/.config/tmux/tmux.conf`；状态栏 `#{!=:...}` 等格式比较需 3.2+ |
+| tmux >= 3.3 | 终端复用器 | 圆角和统一配色的 `display-popup` 需要 3.3+；配置对 3.2a 有条件保护，可继续使用但 popup 外框保持方角 |
+| fzf >= 0.59 | popup/选择器界面 | Ubuntu 22.04 apt 的 0.29 太旧，安装步骤见下 |
+| tldr | `prefix + ?` 命令速查 | 首次运行需 `tldr --update` 下载页面缓存 |
+| yazi | `prefix + y` 浮窗文件管理器 | 可选；未安装时只显示提示，不影响其他功能。安装步骤见下 |
 | Git | TPM 拉取插件 | 必须 |
 | TPM | 插件管理器 | `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm` |
 | 剪贴板工具 | 视终端而定 | 复制走**两条并行**的路：`set-clipboard on` 的 OSC 52，加上探到的本地工具（`pbcopy`/`wl-copy`/`xclip`/`clip.exe`）。终端支持 OSC 52 就不需要工具；**不支持的话就得靠 SSH X11 转发 + `xclip`**（实测有这样的机器） |
@@ -23,11 +26,22 @@
 | tmux-jump | `ruby` | 跳转脚本用 ruby 运行，PATH 里必须有 `ruby` |
 | vim-tmux-navigator | Neovim | nvim 侧装 `christoomey/vim-tmux-navigator`；tmux 侧是 tmux.conf 原生绑定，不依赖 TPM |
 
-### 版本过旧时的处理
+### Ubuntu 22.04 升级 tmux
 
-部分系统仓库 tmux 太旧（< 3.2），状态栏格式和 XDG 配置路径会失效。优先 `tmux -V` 检查，不满足则源码编译或用较新包源：
+Ubuntu 22.04 apt 只有 3.2a。完整 popup 样式需要 3.3+；当前验证版本是 3.7c。安装到版本化目录，不覆盖 `/usr/bin/tmux`：
 
-- **tmux**: 源码编译（需 `libevent`、`ncurses`），或用发行版 backports
+```bash
+apt-get install -y build-essential libevent-dev libncurses-dev bison pkg-config
+curl -fL -o /tmp/tmux-3.7c.tar.gz https://github.com/tmux/tmux/releases/download/3.7c/tmux-3.7c.tar.gz
+printf '7c60cae9a0e25288e2e24750aafc9e8800fc7fd4555e447e1b29ee4201cfb3bf  /tmp/tmux-3.7c.tar.gz\n' | sha256sum -c -
+tar -xzf /tmp/tmux-3.7c.tar.gz -C /tmp
+mkdir -p ~/.local/opt/tmux-3.7c
+(cd /tmp/tmux-3.7c && ./configure --prefix="$HOME/.local/opt/tmux-3.7c" && make -j2 && make install)
+ln -sfn ~/.local/opt/tmux-3.7c/bin/tmux ~/.local/bin/tmux
+```
+
+新版 client 可连接现有 3.2a server，但 `tmux -V` 只显示 client 版本；服务端版本用 `tmux display-message -p '#{version}'`。不要为了升级强杀仍有工作的 server：现有会话全部自然结束后，下次启动会自动使用 3.7c，圆角 popup 才真正生效。
+
 - **ruby**: `apt install ruby` / `brew install ruby`
 - **cargo**: `curl https://sh.rustup.rs -sSf | sh`
 
@@ -54,11 +68,32 @@ command -v ruby || echo "请先安装 ruby"
 # 7. AI 状态指示与选择器：给脚本加可执行位（软链过来后权限可能丢）
 chmod +x ~/.config/tmux/scripts/*.sh
 
-# 8. prefix + a 的选择器需要 fzf >= 0.59。**不能用 apt**：Ubuntu 22.04 只有 0.29，
-#    没有 vim 模式要的 --no-input。装上游静态二进制（会遮住 apt 的那个，不动系统包）
+# 8. prefix + a 的 AI 选择器和 prefix + ? 的 tldr 界面都需要 fzf >= 0.59。
+#    **不能用 apt**：Ubuntu 22.04 只有 0.29，没有双模式要用的输入区切换动作。
+#    装上游静态二进制（会遮住 apt 的那个，不动系统包）
 curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-linux_amd64.tar.gz \
   | tar xz -C /usr/local/bin fzf && fzf --version
+
+# 9. prefix + ? 的命令速查
+apt-get install -y tldr
+tldr --update
+
+# 10. 可选：prefix + y 的浮窗文件管理器
+# Ubuntu 22.04 没有合适的 apt 包；从 Yazi 官方 Releases 下载与架构匹配的预编译包，
+# 解压后把其中的 yazi 和 ya 安装到 ~/.local/bin/。
+# 不要使用旧命令 `cargo install yazi-fm yazi-cli`：当前发布包缺少内置插件文件，会编译失败。
 ```
+
+### 开发与隔离验证
+
+修改 tmux 配置时使用 `/develop-tmux`。先运行隔离验证，不要把用户正在工作的 server 当测试环境：
+
+```bash
+~/dotfiles/skills/develop-tmux/scripts/verify.sh
+~/dotfiles/skills/develop-tmux/scripts/verify.sh --interactive
+```
+
+第一条检查 shell 语法、配置连续加载和关键绑定；第二条附着到私有 server，用于实际操作 popup、copy-mode、状态栏和快捷键。只有隔离验证通过后，才按用户许可在活跃 server 执行 `tmux source`。
 
 ### 版本下限
 
@@ -66,9 +101,9 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 
 | 依赖 | 下限 | 卡在哪个特性 | 不满足会怎样 |
 |------|------|------------|------------|
-| tmux | 3.2a（本机）/ next-3.8（另一台）—— **两个版本都在用** | `#{l:~}` 字面量修饰符、`choose-tree -Zw/-Zs` 的 `-F`、pane 作用域选项在 window 作用域解析到活动 pane、`terminal-features` 的 `RGB`/`usstyle`。已知 3.8 差异：`passthrough` 选项不存在（`tmux.conf:9` 有记） | 图标全不显示，或 format 直接报错 |
+| tmux | **3.3**（完整样式；当前 client 3.7c） | `popup-border-lines rounded`、`popup-style`、`popup-border-style`；其余状态栏/选择器功能仍兼容 3.2a，配置用服务端版本条件保护。另一台 next-3.8 也兼容，且 `passthrough` 选项不存在（`tmux.conf` 有记） | 3.2a 下功能可用，但 popup 外框仍是方角且不能统一着色 |
 | `tmux-256color` terminfo | 可选 | `default-terminal` 优先用它（有 `Smulx` undercurl 和斜体）；`if-shell` 探不到会自动退回 `xterm-256color` | 只是失去 undercurl / 斜体，其余照常 |
-| fzf | **0.59**（实测装的是 0.74.2） | `--no-input` / `show-input` / `hide-input` —— vim 的 normal/insert 切换。另外还要 `rebind`（0.30 引入）和 `change-header`（0.40 引入），都被 0.59 覆盖 | fzf 吐一句参数错误就退出、pane 瞬间关掉，等于静默失败。`ai-pick.sh` 里有显式版本检查挡住这种情况 |
+| fzf | **0.59**（实测装的是 0.74.2） | `--no-input` / `show-input` / `hide-input` —— `prefix+a` 与 `prefix+?` 的 vim 双模式。另外还要 `rebind`（0.30 引入）和 `change-header`（0.40 引入），都被 0.59 覆盖 | fzf 吐一句参数错误就退出、pane/popup 瞬间关掉，等于静默失败；两个脚本都有显式版本检查 |
 | Claude Code | 实测 2.1.161 / 2.1.220 可用。`claude agents` 子命令的下限是 2.1.139，`sessions/*.json` 是它的后端，**推测**同批引入，未实测更早版本 | `~/.claude/sessions/<pid>.json` 的 `status` / `procStart` / `cwd` / `kind` 字段。**`kind` 缺失的记录会被整条丢弃**（照抄 Claude 自己的行为），所以更早版本若不写 `kind` 就全都不认 | Claude 的 pane 永远没图标，qodercli 不受影响 |
 | 平台 | Linux | `procStart` 与 `/proc/<pid>/stat` 第 22 字段（starttime）对齐、从 `tty_nr` 解 `/dev/pts/N` | macOS 上 Claude 侧完全失效 |
 | awk | mawk / gawk 均可 | 只用 POSIX 子集。但 mawk 的 `length`/`substr` 按**字节**算，所以代码里刻意不截断中文摘要、前导字形也显式列举而不用 `[^ ]` | 中文被截成半个字符 |
@@ -136,13 +171,21 @@ curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-
 
 **为什么不用 hooks**：hook 有已证实的覆盖漏洞——按 `Esc` 打断、拒绝提问、关掉权限弹窗，这几种都不触发任何事件，状态会永久卡在 `⚑`。`sessions/*.json` 是 Claude UI 状态的镜像，没有事件缺口。
 
-**选择器为什么不用 `display-popup`**：tmux 3.2a 的 popup 去不掉边框（`-B` 是 3.3 才有）。改用 `split-window -f` + `resize-pane -Z` 开一个满屏 zoom 的临时 pane，视觉上和 `choose-tree -Z` 一致，fzf 退出后 pane 自然消亡。也因此当前 client 就是要切的那个 client，不需要上游那套「把宿主 client 名存进全局选项」+ popup 拆除竞态重试。
+**为什么 AI 选择器仍不用 `display-popup`**：它设计成和 `choose-tree -Z` 一样的无边框满屏界面，并且需要直接切换当前 client。`split-window -f` + `resize-pane -Z` 退出后会自然恢复原布局，也无需处理 popup 拆除与 client 切换竞态；因此即使 tmux 升到 3.3+ 也保留这套结构。
 
 **选择器的 vim 双模式**（两个坑都实测过）：
 
 - `--no-input` 隐藏输入区、让按键只触发绑定，这就是 normal 模式；但**必须再配 `unbind`/`rebind`**——进 insert 后若 `j`/`k` 还绑着 `down`/`up`，就打不出 `j` 这个字符了。上游 CHANGELOG 的 0.59.0 示例正是这么写的。
 - `esc` 的动作顺序里 **`clear-query` 必须排在 `hide-input` 之前**。反了的话输入区一藏起来，查询变更就不再触发重新过滤，回到 normal 时列表还停在过滤后的结果上。
 - 列表行的可见内容拼成**一个** TSV 字段再 `--with-nth=4`。用多个字段会被 fzf 用原始分隔符拼回去，tab 按 8 列制表位展开，宽度全被吃掉、列也对不齐。
+
+### 统一 fzf 层与 TLDR popup
+
+`scripts/fzf-common.sh` 是四个 fzf 界面的共享层：统一版本检查、清空 `FZF_DEFAULT_OPTS`、零 margin 布局和 OneDark 配色。`config-pick.sh`、`path-pick.sh`、`tldr-popup.sh` 共享 popup 基线；`ai-pick.sh` 只共享版本/颜色，保留自己的满屏 `reverse-list` 布局。各工具的数据生成、键位和 preview 不要塞进公共文件。
+
+`scripts/tldr-popup.sh` 在 `prefix + ?` 的 popup 里运行单个 fzf。输入时所有字符键都必须可录入；Enter 用 `reload-sync` 调脚本自己的 `--render` 模式刷新结果并隐藏输入栏。结果中 `j/k`、`g/G`、半页/整页移动，`a/i` 清空并恢复输入，`q/Esc` 退出；`[`/`]` 调 `--jump` 重新计算上一/下一空行的 `pos(N)`，不要改回依赖 fzf 临时搜索状态的写法。`y` 调 `--copy` 复制当前完整逻辑行到 tmux buffer/OSC52 和可用的本地剪贴板工具。
+
+模式切换必须配套 `unbind`/`rebind`；否则输入栏里的 `j/k/a/i/q/y` 会被当作浏览键。查询只经 fzf `{q}` 作为单参数传给 renderer，renderer 再把空格规范化为连字符（`git stage` → `git-stage`），禁止用 `eval` 拼接用户输入。
 
 ## 排错
 

@@ -3,7 +3,7 @@
 ## Install
 
 ```bash
-# 软链配置（tmux 3.1+ 读 XDG 路径）
+# 软链配置（tmux 3.3+；圆角 popup 需要 3.3，Ubuntu 22.04 升级方法见 AGENTS.md）
 ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
 
 # 装 TPM 插件管理器
@@ -166,9 +166,32 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 
 | 快捷键 | 功能 |
 |--------|------|
-| `prefix + ?` | 显示所有快捷键 |
+| `prefix + ?` | 打开 tldr 命令速查（双模式 popup） |
+| `prefix + H` | 显示所有 tmux 快捷键 |
 | `prefix + R` | 重载配置 |
+| `prefix + c` | popup 中选择并打开配置文件 |
+| `prefix + p` | popup 中模糊选择屏幕可见路径并复制 |
+| `prefix + y` | popup 打开 yazi（未安装则提示） |
+
+### TLDR 命令速查（`prefix + ?`）
+
+顶部输入命令，下方显示查询结果；输入 `git stage` 这类多词命令会自动转换为对应的 `git-stage` 页面。进入结果后输入栏收起，让内容占满 popup；`a` / `i` 可随时清空并重新查询。
+
+| 按键 | 输入栏 | 查询结果 |
+|------|--------|----------|
+| `Enter` | 查询并进入结果 | — |
+| `j` / `k` | 输入字符 | 下一行 / 上一行 |
+| `[` / `]` | 输入字符 | 上一段 / 下一段（按空行跳转） |
+| `g` / `G` | 输入字符 | 首行 / 尾行 |
+| `Ctrl-u` / `Ctrl-d` | — | 上 / 下半页 |
+| `Ctrl-b` / `Ctrl-f` | — | 上 / 下整页 |
+| `y` | 输入字符 | 复制当前完整逻辑行 |
+| `a` / `i` | 输入字符 | 清空并返回输入栏 |
+| `Esc` | 退出 | 退出 |
+| `q` | 输入字符 | 退出 |
+
+首次使用会自动下载页面缓存，之后可运行 `tldr --update` 手动更新。fzf 选择器统一从 `scripts/fzf-common.sh` 读取 OneDark 配色与无留白布局；tmux 3.3+ 的 popup 外框统一为圆角蓝边。
 
 ### 状态栏提示
 
-左侧状态块随当前按键状态变化：按下 `prefix` 显示暗黄底 `PREFIX`；进入自定义 key-table（如 `prefix + Space` 后的 `jump` 子表）显示该表名字；平时蓝底显示 session 名。
+左侧状态块随当前按键状态变化：按下 `prefix` 显示 `PREFIX`；进入自定义 key-table（如 `prefix + Space` 后的 `jump` 子表）显示该表名字；平时用柔和蓝色文字显示 session 名，并在后面用灰色显示当前 pane 路径最后几级。

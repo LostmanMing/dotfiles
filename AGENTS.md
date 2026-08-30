@@ -4,6 +4,10 @@
 
 **重要**: 不要一次性安装所有配置。先向用户列出可选配置清单，让用户自行选择需要哪些。每个配置独立安装，互不依赖。
 
+## 开发 Skill 路由
+
+维护本仓库时使用 `/develop-dotfiles`。涉及 Neovim（`.config/nvim/**` 或独立 `dotfiles-nvim` 仓库）必须进一步调用 `/develop-neovim`；涉及 `.config/tmux/**` 必须调用 `/develop-tmux`；跨 tmux/Neovim 的剪贴板或导航改动两者都调用。模块细节以各自 `AGENTS.md` 和代码为准。
+
 ---
 
 ## 1. Claude Code
@@ -52,7 +56,8 @@ Ubuntu/Debian：
 
 ```bash
 apt-get update
-apt-get install -y bash-completion fzf zoxide gawk git make fd-find ripgrep bat file tree
+apt-get install -y bash-completion fzf zoxide gawk git make fd-find ripgrep bat file tree tldr
+tldr --update                 # 首次下载页面缓存；之后按需手动更新
 ```
 
 Ubuntu 22.04 apt 没有 `eza`，需要先有 Cargo/Rust 工具链，再用 Cargo 安装：
@@ -145,6 +150,7 @@ nvim  # 首次启动自动安装插件和 LSP
 > 详见 `.config/tmux/README.md`
 
 ```bash
+# tmux 3.3+；Ubuntu 22.04 的安全源码升级步骤见 ~/.config/tmux/AGENTS.md
 ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
 tmux source ~/.config/tmux/tmux.conf
 ```

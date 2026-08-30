@@ -20,23 +20,9 @@
 set -u
 
 dir="${0%/*}"; [ "$dir" = "$0" ] && dir=.
-
-# vim 模式要 fzf >= 0.59（--no-input / show-input / hide-input 是那版引入的）。
-# 版本太老时 fzf 只吐一句参数错误就退出、pane 瞬间关掉，等于静默失败，所以显式挡住。
-# 注意 apt 上的 Ubuntu 22.04 只有 0.29，必须装上游二进制，见 AGENTS.md。
-command -v fzf >/dev/null 2>&1 || {
-    tmux display-message "prefix+a 需要 fzf >= 0.59（apt 的 0.29 不够，见 AGENTS.md）"
-    exit 0
-}
-# 0.74.2 -> 74；0.29 -> 29；将来的 1.2 -> 1002。取前两段做数值比较即可。
-fzf_ver=$(fzf --version 2>/dev/null | awk -F'[. ]' '{print $1 * 1000 + $2; exit}')
-[ "${fzf_ver:-0}" -ge 59 ] || {
-    tmux display-message "fzf 版本过低（$(fzf --version 2>/dev/null | awk '{print $1}')），vim 模式需要 >= 0.59，见 AGENTS.md"
-    exit 0
-}
-
-# 别让用户将来的全局 fzf 配置（--height / --tmux 之类）搞坏这个界面
-export FZF_DEFAULT_OPTS=''
+# shellcheck source=fzf-common.sh
+source "$dir/fzf-common.sh"
+fzf_require 0.59 "prefix+a" || exit 0
 
 # 状态列用固定宽度的字面量而不是 printf %-10s：mawk 按**字节**计宽，中文会算错。
 # 三列都补到 10 个显示格（⚑✦✓ 都是 East Asian Width = N，占 1 格）。
@@ -93,6 +79,7 @@ to_insert="show-input+unbind($vim_keys)+change-header($hint_insert)"
 # -e 保留对方自己的颜色
 # --tiebreak=index：打分相同时保持上面排好的顺序
 sel=$(printf '%s\n' "$rows" | fzf \
+    "${FZF_THEME[@]}" \
     --ansi \
     --delimiter="$(printf '\t')" \
     --with-nth=4 \

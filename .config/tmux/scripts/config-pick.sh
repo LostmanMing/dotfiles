@@ -2,19 +2,15 @@
 # config-pick.sh —— prefix + c 的配置文件选择器。
 # 浮窗（display-popup）里 fzf 列出常用配置文件：j/k 上下移动、回车用 nvim
 # 打开（nvim 仍在该浮窗内，退出后浮窗自动消失）、Esc 取消。
-#
-# 依赖：tmux >= 3.3（-B 去边框）、fzf、nvim。
-# 键位是 fzf 的 --bind 显式绑的（j:down,k:up），和 copy-mode-vi 手感一致。
-# 为什么这次能用 display-popup 而 ai-pick.sh 不用：ai-pick 写在 3.2a 上，
-# 那时 popup 去不掉边框（-B 是 3.3 才引入），所以它退化成满屏 zoom；
-# 本机 tmux 3.7b，-B 可用，直接真浮窗。
+# 运行在 tmux display-popup 中；外框样式由 tmux.conf 统一设置，内部 fzf 样式来自
+# fzf-common.sh。键位仍由本脚本管理：j/k 移动，a 搜索，Enter 用 nvim 打开。
 set -u
 
-command -v fzf >/dev/null 2>&1 || { tmux display-message "prefix+c 需要 fzf"; exit 0; }
+dir="${0%/*}"; [ "$dir" = "$0" ] && dir=.
+# shellcheck source=fzf-common.sh
+source "$dir/fzf-common.sh"
+fzf_require 0.59 "prefix+c" || exit 0
 command -v nvim >/dev/null 2>&1 || { tmux display-message "prefix+c 需要 nvim"; exit 0; }
-
-# 别让用户全局 fzf 配置（--height / --tmux 之类）搞坏这个界面
-export FZF_DEFAULT_OPTS=''
 
 # ── 候选生成：动态扫描，不硬编码 ────────────────────────────
 # 三条规则并集（sort -u 去重）：
@@ -72,9 +68,8 @@ done <<< "$list"
 # 样式跟随 tmux 的 one-dark 主题（#61afef 蓝 / #e5c07b 金 / #98c379 绿），
 # 右侧 preview 用 nl 带行号预览文件内容（没有 bat，不额外装依赖）。
 choice=$(printf '%s\n' "${files[@]}" | fzf \
-    --height=100% \
-    --layout=reverse \
-    --margin=1 \
+    "${FZF_POPUP_LAYOUT[@]}" \
+    "${FZF_THEME[@]}" \
     --with-nth=1 --delimiter=$'\t' \
     --no-input \
     --bind 'j:down,k:up,q:abort,a:show-input+unbind(j,k,a,q)' \
@@ -85,11 +80,11 @@ choice=$(printf '%s\n' "${files[@]}" | fzf \
         echo abort
       fi' \
     --ansi \
-    --header $'\x1b[38;5;180mj/k 上下移动 · 回车用 nvim 打开 · q 退出 · a 查询\x1b[0m' \
+    --input-border=rounded --input-label=' 搜索 ' --input-label-pos=2 \
+    --list-border=rounded --list-label=' 配置 · j/k 移动 · Enter 打开 · a 搜索 · q 退出 ' --list-label-pos=2 \
     --prompt '⚙ ' \
     --preview 'p=$(printf "%s" {} | cut -f2); [ -f "$p" ] && nl -ba "$p" | head -n 50' \
     --preview-window 'right:45%,border-rounded' \
-    --color 'fg:#abb2bf,fg+:white,bg:#282c34,bg+:#3e4452,hl:#61afef,hl+:#61afef,info:#61afef,marker:#98c379,prompt:#61afef,spinner:#e5c07b,pointer:#61afef,header:#e5c07b,border:#3e4452' \
     --no-multi)
 
 [ -z "$choice" ] && exit 0
