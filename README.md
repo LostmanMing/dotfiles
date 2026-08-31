@@ -24,25 +24,28 @@ git clone --recurse-submodules git@github.com:LostmanMing/dotfiles.git ~/dotfile
 # Create config symlink
 ln -s ~/dotfiles/.config/nvim ~/.config/nvim
 
-# Install agent skills without replacing an existing ~/.qoder/skills directory
+# Install runtime-neutral agent skills (Qoder path shown as one example)
+# For another agent host, link the same skill directories into its skill search path.
 mkdir -p ~/.qoder/skills
 ln -s ~/dotfiles/skills/develop-dotfiles ~/.qoder/skills/develop-dotfiles
 ln -s ~/dotfiles/skills/develop-neovim ~/.qoder/skills/develop-neovim
 ln -s ~/dotfiles/skills/develop-tmux ~/.qoder/skills/develop-tmux
+ln -s ~/dotfiles/skills/keep-weekly-notes ~/.qoder/skills/keep-weekly-notes
 
 # Start Neovim (first launch installs everything)
 nvim
 ```
 
-## Development Skills
+## Agent Skills
 
 | Skill | Purpose |
 |-------|---------|
 | `/develop-dotfiles` | 总入口；协调根仓库、子模块和跨模块修改 |
 | `/develop-neovim` | Neovim 插件、Lua、键位、LSP/DAP 与真实启动验证 |
 | `/develop-tmux` | tmux 配置、脚本、popup、状态和隔离 server 验证 |
+| `/keep-weekly-notes` | 将对话中的核心工作按主题整理为每周离线 HTML，并维护优化路线与最终决策 |
 
-安装后运行 `/skills reload`，再用 `/skills list` 确认三个技能可用。总入口在任务涉及 Neovim 或 tmux 时会调用对应子 skill。
+安装后运行 `/skills reload`，再用 `/skills list` 确认所需技能可用。总入口在任务涉及 Neovim 或 tmux 时会调用对应子 skill。
 
 ## Structure
 

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第 {{WEEK_ID}} 周 · 周记</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #21252b;
+      --panel: #282c34;
+      --panel-soft: #2c313a;
+      --text: #abb2bf;
+      --strong: #e6e9ef;
+      --muted: #8b929f;
+      --line: #3e4451;
+      --blue: #61afef;
+      --cyan: #56b6c2;
+      --green: #98c379;
+      --yellow: #e5c07b;
+      --purple: #c678dd;
+      --radius: 12px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--bg); scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    main {
+      width: min(100% - 32px, 920px);
+      margin: 0 auto;
+      padding: 56px 0 72px;
+    }
+    header {
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--cyan);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 { color: var(--strong); line-height: 1.25; }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 7vw, 3.5rem);
+      letter-spacing: -0.04em;
+    }
+    h2 { margin: 0; font-size: clamp(1.35rem, 4vw, 1.8rem); }
+    h3 { margin: 0 0 8px; font-size: 1rem; }
+    p { margin: 0; }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    nav {
+      margin: 24px 0;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+    nav strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--strong);
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+    }
+    nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    nav a {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 7px;
+      color: var(--blue);
+      background: var(--panel-soft);
+      text-decoration: none;
+    }
+    a:hover { color: var(--cyan); }
+    a:focus-visible {
+      outline: 3px solid var(--yellow);
+      outline-offset: 3px;
+    }
+    .template-note {
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      border-left: 3px solid var(--purple);
+      color: var(--muted);
+      background: var(--panel);
+      font-size: 0.9rem;
+    }
+    code {
+      color: var(--yellow);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    article {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 16px 44px rgb(0 0 0 / 18%);
+    }
+    .article-head {
+      padding: 22px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .slug {
+      margin-top: 5px;
+      color: var(--muted);
+      font: 0.82rem ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+    article section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    article section:last-child { border-bottom: 0; }
+    .outcome { border-left: 3px solid var(--green); }
+    .evidence { border-left: 3px solid var(--blue); }
+    .route { border-left: 3px solid var(--yellow); }
+    .rationale { border-left: 3px solid var(--purple); }
+    .next { border-left: 3px solid var(--cyan); }
+    .label {
+      margin-left: 6px;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    ol { margin: 8px 0 0; padding-left: 1.4rem; }
+    li + li { margin-top: 6px; }
+
+    @media (max-width: 600px) {
+      main { width: min(100% - 20px, 920px); padding: 32px 0 48px; }
+      .article-head, article section { padding: 18px; }
+    }
+
+    @media print {
+      :root { color-scheme: light; }
+      html, body {
+        color: #25282d;
+        background: #fff;
+        font-size: 11pt;
+      }
+      main { width: 100%; padding: 0; }
+      header { border-color: #bbb; }
+      h1, h2, h3 { color: #111; }
+      .eyebrow, nav a { color: #245d87; }
+      .meta, .slug, .label, .template-note { color: #555; }
+      nav, .template-note, article {
+        background: #fff;
+        border-color: #bbb;
+        box-shadow: none;
+      }
+      nav a { padding: 0; background: none; }
+      article { break-inside: avoid; }
+      article section, .article-head { border-color: #ccc; }
+    }
+  </style>
+</head>
+<body>
+  <main data-week="{{WEEK_ID}}">
+    <header>
+      <p class="eyebrow">Weekly Notes</p>
+      <h1>第 {{WEEK_ID}} 周</h1>
+      <div class="meta">
+        <span>{{WEEK_RANGE}}</span>
+        <span>更新于 {{UPDATED_AT}}</span>
+      </div>
+    </header>
+
+    <!-- Replace this navigation together with the sample article below. -->
+    <nav aria-label="本周主题">
+      <strong>本周主题</strong>
+      <ul><li><a href="#topic-slug">示例主题（请替换）</a></li></ul>
+    </nav>
+
+    <p class="template-note">
+      模板说明：将示例导航与示例文章整体替换为 <code>{{TOPICS}}</code> 生成的主题内容；保留每篇文章的结构类名。
+    </p>
+
+    <!-- Replace this complete sample article; repeat the contract for each topic. -->
+    <article id="topic-slug" data-topic="topic-slug">
+      <div class="article-head">
+        <h2>示例主题标题（模板指引）</h2>
+        <p class="slug">topic-slug · 标题、锚点与 data-topic 应保持对应</p>
+      </div>
+      <section class="outcome">
+        <h3>当前结果</h3>
+        <p>用一两句话写清本周已得到、可验证的结果，而不是记录过程流水账。</p>
+      </section>
+      <section class="evidence">
+        <h3>证据<span class="label">可选</span></h3>
+        <p>补充数据、产物、反馈或其他支持当前结果的简短证据。</p>
+      </section>
+      <section class="route">
+        <h3>优化路线<span class="label">可选</span></h3>
+        <ol>
+          <li>先写关键改动或判断。</li>
+          <li>再写如何验证与收敛。</li>
+        </ol>
+      </section>
+      <section class="rationale">
+        <h3>最终理由</h3>
+        <p>说明为何选择最终方案，以及它相对备选方案的核心取舍。</p>
+      </section>
+      <section class="next">
+        <h3>下一步<span class="label">可选</span></h3>
+        <p>只保留明确、可执行且值得带入下一周的行动。</p>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

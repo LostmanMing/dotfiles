@@ -22,7 +22,6 @@
 
 | 插件 | 依赖 | 说明 |
 |------|------|------|
-| tmux-thumbs | Rust / `cargo` | Rust 二进制，装完需 `cargo build --release` 构建 |
 | tmux-jump | `ruby` | 跳转脚本用 ruby 运行，PATH 里必须有 `ruby` |
 | vim-tmux-navigator | Neovim | nvim 侧装 `christoomey/vim-tmux-navigator`；tmux 侧是 tmux.conf 原生绑定，不依赖 TPM |
 
@@ -43,7 +42,6 @@ ln -sfn ~/.local/opt/tmux-3.7c/bin/tmux ~/.local/bin/tmux
 新版 client 可连接现有 3.2a server，但 `tmux -V` 只显示 client 版本；服务端版本用 `tmux display-message -p '#{version}'`。不要为了升级强杀仍有工作的 server：现有会话全部自然结束后，下次启动会自动使用 3.7c，圆角 popup 才真正生效。
 
 - **ruby**: `apt install ruby` / `brew install ruby`
-- **cargo**: `curl https://sh.rustup.rs -sSf | sh`
 
 ## Installation
 
@@ -59,16 +57,13 @@ tmux source ~/.config/tmux/tmux.conf
 
 # 4. 在 tmux 内按 prefix + I 拉取插件（prefix = Ctrl+z）
 
-# 5. 构建 tmux-thumbs 的 Rust 二进制
-cd ~/.tmux/plugins/tmux-thumbs && cargo build --release
-
-# 6. 确保 ruby 在 PATH（tmux-jump 需要）
+# 5. 确保 ruby 在 PATH（tmux-jump 需要）
 command -v ruby || echo "请先安装 ruby"
 
-# 7. AI 状态指示与选择器：给脚本加可执行位（软链过来后权限可能丢）
+# 6. AI 状态指示与选择器：给脚本加可执行位（软链过来后权限可能丢）
 chmod +x ~/.config/tmux/scripts/*.sh
 
-# 8. prefix + a 的 AI 选择器和 prefix + ? 的 tldr 界面都需要 fzf >= 0.59。
+# 7. prefix + a 的 AI 选择器和 prefix + ? 的 tldr 界面都需要 fzf >= 0.59。
 #    **不能用 apt**：Ubuntu 22.04 只有 0.29，没有双模式要用的输入区切换动作。
 #    装上游静态二进制（会遮住 apt 的那个，不动系统包）
 curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-linux_amd64.tar.gz \
@@ -108,7 +103,6 @@ tldr --update
 | 平台 | Linux | `procStart` 与 `/proc/<pid>/stat` 第 22 字段（starttime）对齐、从 `tty_nr` 解 `/dev/pts/N` | macOS 上 Claude 侧完全失效 |
 | awk | mawk / gawk 均可 | 只用 POSIX 子集。但 mawk 的 `length`/`substr` 按**字节**算，所以代码里刻意不截断中文摘要、前导字形也显式列举而不用 `[^ ]` | 中文被截成半个字符 |
 | ruby | 任意 | tmux-jump 插件 | `prefix + Space s` 报 `returned 127` |
-| cargo | 任意 | 编译 tmux-thumbs | `prefix + Space f` 不可用 |
 
 ### 剪贴板互通
 

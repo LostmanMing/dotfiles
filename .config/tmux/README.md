@@ -12,9 +12,8 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 # 加载配置
 tmux source ~/.config/tmux/tmux.conf
 
-# 在 tmux 内 prefix + I 拉取插件，然后：
-cd ~/.tmux/plugins/tmux-thumbs && cargo build --release   # tmux-thumbs 需构建
-command -v ruby || echo "tmux-jump 需要 ruby"              # tmux-jump 需 ruby
+# 在 tmux 内 prefix + I 拉取插件，然后确认 tmux-jump 的运行时依赖：
+command -v ruby || echo "tmux-jump 需要 ruby"
 ```
 
 > 完整依赖清单见 `AGENTS.md`。改完配置用 `tmux source ~/.config/tmux/tmux.conf` 重载。
@@ -26,12 +25,10 @@ command -v ruby || echo "tmux-jump 需要 ruby"              # tmux-jump 需 rub
 | 插件 | 作用 |
 |------|------|
 | vim-tmux-navigator | `Ctrl+hjkl` nvim ↔ tmux 无缝导航（tmux 侧为原生绑定，不依赖 TPM；nvim 侧装 christoomey/vim-tmux-navigator） |
-| tmux-thumbs | `prefix + f` 屏幕词/路径/URL 标字母一键复制（需 cargo 构建） |
 | tmux-jump | `prefix + Space` 再按 `s`，easymotion 式跳转光标（需 ruby） |
 
 ### 插件用法
 
-- **tmux-thumbs**：`prefix + f` → 屏幕上的词/路径/URL/hash 标上字母 → 按对应字母即复制（经 `set-clipboard on` + OSC52 进系统剪贴板）。
 - **tmux-jump**：`prefix + Space` 进入 `jump` 子表（状态栏左侧会显示 `jump`）→ 按 `s` → 输入一个目标字符 → 屏幕上该字符处标字母 → 按字母把光标跳过去；`Esc` 退出子表。
 
 ## Clipboard
@@ -170,7 +167,7 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | `prefix + H` | 显示所有 tmux 快捷键 |
 | `prefix + R` | 重载配置 |
 | `prefix + c` | popup 中选择并打开配置文件 |
-| `prefix + p` | popup 中模糊选择屏幕可见路径并复制 |
+| `prefix + f` | popup 中模糊选择当前窗口各 pane 的可见路径并复制 |
 | `prefix + y` | popup 打开 yazi（未安装则提示） |
 
 ### TLDR 命令速查（`prefix + ?`）
@@ -194,4 +191,4 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 
 ### 状态栏提示
 
-左侧状态块随当前按键状态变化：按下 `prefix` 显示 `PREFIX`；进入自定义 key-table（如 `prefix + Space` 后的 `jump` 子表）显示该表名字；平时用柔和蓝色文字显示 session 名，并在后面用灰色显示当前 pane 路径最后几级。
+左侧状态块随当前按键状态变化：按下 `prefix` 显示 `PREFIX`；进入自定义 key-table（如 `prefix + Space` 后的 `jump` 子表）显示该表名字；平时用柔和蓝色文字显示 session 名，并在后面用灰色显示当前 pane 路径最后几级。中间窗口列表相对整个终端绝对居中，不会被左侧长路径或右侧 AI 计数挤偏。

@@ -106,9 +106,11 @@ assert_binding() {
 
 assert_equal prefix C-z "$(tx show-options -gv prefix)"
 assert_equal set-clipboard on "$(tx show-options -gv set-clipboard)"
+assert_equal status-justify absolute-centre "$(tx show-options -gv status-justify)"
 assert_binding R source-file
 assert_binding c config-pick.sh
-assert_binding p path-pick.sh
+assert_binding f path-pick.sh
+assert_binding p previous-window
 assert_binding y yazi
 assert_binding '?' tldr-popup.sh
 
@@ -120,7 +122,7 @@ if [ "$(tx display-message -p '#{>=:#{version},3.3}')" = 1 ]; then
     assert_equal popup-border-lines rounded "$(tx show-options -gv popup-border-lines)"
 fi
 
-for tool in fzf tldr nvim rg yazi ruby cargo; do
+for tool in fzf tldr nvim rg yazi ruby; do
     command -v "$tool" >/dev/null 2>&1 || printf 'WARN  optional command not found: %s\n' "$tool"
 done
 
