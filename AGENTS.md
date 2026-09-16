@@ -4,6 +4,14 @@
 
 **重要**: 不要一次性安装所有配置。先向用户列出可选配置清单，让用户自行选择需要哪些。每个配置独立安装，互不依赖。
 
+## 空机器快速启动顺序
+
+空机器初始化、clone 后激活、tmux prefix 未生效、复用 `~/dotfiles-nvim` 或子模块 SSH 卡住时，统一使用 `/bootstrap-dotfiles`。不要从 `git clone --recurse-submodules` 或 blanket recursive submodule update 开始，也不要手写 `ln -sfn` 覆盖已有配置。
+
+该 skill 先运行只读 `--check`，确认最少的 Git、tmux（最低 3.2a；统一安装 3.8）、Neovim >= 0.12 和链接碰撞，再用 bundled script 安全激活。tmux 会先在私有 socket 验证；只有用户明确许可时才 source 当前 server，且不会 kill/restart。Neovim 优先复用有效的 `~/dotfiles-nvim`，否则只初始化 pinned `.config/nvim` 子模块，不启动配置或插件安装。
+
+Claude、TPM、fzf/tldr、ruby、yazi、shell 美化、DAP 和 macOS 组件都属于后续阶段，按需一个个装。公共只读 submodule URL 默认用 HTTPS；需要 push 权限时只改对应工作树的本地 remote/config，不修改全局 Git config。
+
 ## 开发 Skill 路由
 
 维护本仓库时使用 `/develop-dotfiles`。涉及 Neovim（`.config/nvim/**` 或独立 `dotfiles-nvim` 仓库）必须进一步调用 `/develop-neovim`；涉及 `.config/tmux/**` 必须调用 `/develop-tmux`；跨 tmux/Neovim 的剪贴板或导航改动两者都调用。模块细节以各自 `AGENTS.md` 和代码为准。
@@ -31,7 +39,7 @@
 ### 安装
 
 ```bash
-cd ~/dotfiles && git submodule update --init --recursive
+cd ~/dotfiles && git submodule update --init .claude
 ln -sf ~/dotfiles/.claude ~/.claude
 bash ~/.claude/setup.sh deepseek    # 输入 API Key
 ```
@@ -140,22 +148,13 @@ cargo install git-delta        # 或从 GitHub Release 下 delta 二进制
 
 > 详见 `.config/nvim/AGENTS.md`
 
-```bash
-ln -sf ~/dotfiles/.config/nvim ~/.config/nvim
-nvim  # 首次启动自动安装插件和 LSP
-```
+根 dotfiles 集成统一运行 `/bootstrap-dotfiles`；它会安全选择独立 checkout 或 pinned 子模块并拒绝覆盖 `~/.config/nvim`。基础阶段只检查 Neovim >= 0.12，不启动配置；lazy.nvim、plugins、LSP 和 DAP 后置。
 
 ## 5. Tmux
 
 > 详见 `.config/tmux/README.md`
 
-```bash
-# tmux 3.3+；Ubuntu 22.04 的安全源码升级步骤见 ~/.config/tmux/AGENTS.md
-ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
-tmux source ~/.config/tmux/tmux.conf
-```
-
-Prefix: `Ctrl+z`，面板导航 `h/j/k/l`，分屏 `\`/`-`（对齐 nvim）。
+根 dotfiles 集成统一运行 `/bootstrap-dotfiles`；它先创建安全链接并在私有 socket 验证，只有用户明确许可才 source 当前 server。完成后即可使用 `prefix=C-z`、`h/j/k/l` 导航和 `\`/`-` 分屏；TPM、tmux-jump/ruby、fzf/tldr popup、Yazi 都是后续增强。
 
 ---
 

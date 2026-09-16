@@ -19,17 +19,19 @@ argument-hint: <要开发、安装或排查的 dotfiles 功能>
 
 模块任务开始实现前，必须通过 `Skill` 工具激活相应子 skill；不要只口头引用：
 
+- 空机器、clone 后激活、基础 tmux/Neovim 软链、tmux prefix 未生效、复用 `~/dotfiles-nvim`、子模块 SSH 卡住 → `bootstrap-dotfiles`
 - Neovim、Lua、插件、LSP、DAP、keymap、`.config/nvim/**`、`/root/dotfiles-nvim/**` → `develop-neovim`
 - tmux、pane/window/session、popup、fzf、状态栏、tmux 剪贴板、`.config/tmux/**` → `develop-tmux`
-- nvim ↔ tmux 导航或剪贴板等跨模块任务 → 两个子 skill 都激活
+- nvim ↔ tmux 导航或剪贴板等跨模块任务 → 两个开发子 skill 都激活
 - shell、Git、根 README/AGENTS、技能包和子模块指针 → 留在本 skill
 
-子 skill 已在当前任务运行时不要重复激活。子任务完成后回到这里检查跨模块一致性和最终 diff。
+基础激活先交给 `bootstrap-dotfiles`；只有脚本暴露出配置本身的缺陷时，才进一步调用 `develop-tmux` 或 `develop-neovim`。子 skill 已在当前任务运行时不要重复激活。子任务完成后回到这里检查跨模块一致性和最终 diff。
 
 ## 工作流
 
 ### 安装
 
+- 空机器或 clone 后的基础激活调用 `bootstrap-dotfiles`，不要另写 `ln -sfn` 或 blanket recursive submodule 流程。
 - 先列出目标组件和必需/可选依赖，只安装用户选择的部分。
 - 优先使用仓库记录的版本和安装路径；系统仓库过旧时再使用固定版本二进制或源码安装。
 - 软链前检查目标，不能覆盖用户已有文件或整个 `~/.qoder/skills` 目录。

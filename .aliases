@@ -72,7 +72,10 @@ alias gkha='git reset --hard HEAD^'
 alias gks='git reset --soft'
 alias gksa='git reset --soft HEAD^'
 alias grc='git rm --cached'
-alias gsmu='git submodule update --init --recursive'
+alias gsmu='git submodule update --init'
+alias gsmn='git submodule update --init .config/nvim'
+alias gsmc='git submodule update --init .claude'
+alias gsmur='git submodule update --init --recursive'
 alias g='git'
 
 # ── Misc ───────────────────────────────────────────────

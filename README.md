@@ -17,29 +17,45 @@ My dotfiles managed with git submodules.
 
 ## Installation
 
+Clone only the root repository over HTTPS; do not start with recursive submodules:
+
 ```bash
-# Clone with all submodules
-git clone --recurse-submodules git@github.com:LostmanMing/dotfiles.git ~/dotfiles
+git clone https://github.com/LostmanMing/dotfiles.git ~/dotfiles
+```
 
-# Create config symlink
-ln -s ~/dotfiles/.config/nvim ~/.config/nvim
+Use `/bootstrap-dotfiles` to activate a minimum usable tmux + Neovim environment. For Qoder, link the skill into its search path and reload skills:
 
-# Install runtime-neutral agent skills (Qoder path shown as one example)
-# For another agent host, link the same skill directories into its skill search path.
+```bash
 mkdir -p ~/.qoder/skills
+ln -s ~/dotfiles/skills/bootstrap-dotfiles ~/.qoder/skills/bootstrap-dotfiles
+```
+
+Then run `/skills reload` followed by `/bootstrap-dotfiles`. Other agent hosts can link the same directory into their own skill search path.
+
+Without a skill host, run the bundled implementation directly:
+
+```bash
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --check
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --apply
+```
+
+The bootstrap reuses a valid `~/dotfiles-nvim`, otherwise initializes only the pinned `.config/nvim` submodule over HTTPS. It refuses link collisions, validates tmux on a private socket, and does not launch Neovim or install plugins. Sourcing an active tmux server requires the explicit `--source-active-tmux` option.
+
+After the base environment works, add only the components you want: TPM, fzf/tldr, ruby, yazi, shell extras, DAP tools, Claude configuration, or the remaining agent skills.
+
+```bash
+# Qoder examples for additional runtime-neutral skills
 ln -s ~/dotfiles/skills/develop-dotfiles ~/.qoder/skills/develop-dotfiles
 ln -s ~/dotfiles/skills/develop-neovim ~/.qoder/skills/develop-neovim
 ln -s ~/dotfiles/skills/develop-tmux ~/.qoder/skills/develop-tmux
 ln -s ~/dotfiles/skills/keep-weekly-notes ~/.qoder/skills/keep-weekly-notes
-
-# Start Neovim (first launch installs everything)
-nvim
 ```
 
 ## Agent Skills
 
 | Skill | Purpose |
 |-------|---------|
+| `/bootstrap-dotfiles` | 空机器或 clone 后安全激活最小可用 tmux + Neovim，不覆盖已有配置 |
 | `/develop-dotfiles` | 总入口；协调根仓库、子模块和跨模块修改 |
 | `/develop-neovim` | Neovim 插件、Lua、键位、LSP/DAP 与真实启动验证 |
 | `/develop-tmux` | tmux 配置、脚本、popup、状态和隔离 server 验证 |
@@ -71,7 +87,7 @@ nvim
 
 ## How It Works
 
-Each config app lives in its own git repo, added as a submodule under `.config/`. Symlinks from `~/.config/<app>` point into the dotfiles tree.
+Some configs live directly in this root repo; Neovim and Claude are submodules. On fresh machines, Neovim may also be linked directly from an existing `~/dotfiles-nvim` checkout instead of initializing the submodule immediately. Symlinks from `~/.config/<app>` point to whichever checked-out config you choose.
 
 ```
 dotfiles/          ~/.config/
@@ -88,10 +104,17 @@ ln -s ~/dotfiles/.config/<app-name> ~/.config/<app-name>
 git commit -m "feat: add <app-name> config"
 ```
 
-## Updating All Submodules
+## Updating Submodules
 
 ```bash
 cd ~/dotfiles
+
+# Preferred: update only the component you are working on.
+git submodule update --remote --merge .config/nvim
+# or:
+git submodule update --remote --merge .claude
+
+# Only when intentionally updating everything:
 git submodule update --remote --merge
 git commit -m "chore: update submodules"
 ```

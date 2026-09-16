@@ -26,6 +26,16 @@ argument-hint: <要开发或排查的 Neovim 功能>
 
 涉及剪贴板、buffer/tab、特殊窗口、DAP 或终端交互时，先读 `references/guardrails.md` 的对应段落。
 
+## 交互 UI 约定
+
+按交互语义复用现有入口，修改前先确认 provider，避免为同类场景再加一个弹窗：
+
+- 短时通知用 `vim.notify → Noice → Snacks Notifier`；文本输入用 `vim.ui.input → Snacks Input`；普通单选用 `vim.ui.select → Snacks Picker`。
+- 搜索、多选、预览和跨 tab 跳转保留 Telescope；命令行、消息历史与 LSP 文档保留 Noice。
+- Neo-tree、Trouble、Diffview、DAP REPL、Toggleterm 是持久专用面板，不要强行改成 picker 或通知。
+- 原生诊断 float、gitsigns hunk/blame、Blink completion 是轻量专用浮层，保持各自语义。
+- 敏感输入与同步 `vim.fn.input`（如 LeetCode cookie、DAP 路径）先评估历史记录与异步兼容，不能直接套 Snacks Input。
+
 ## 验证
 
 1. 读取 `<ROOT>/skills/verify-nvim-config/SKILL.md`。

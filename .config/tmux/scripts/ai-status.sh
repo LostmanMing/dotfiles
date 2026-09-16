@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# ai-status.sh —— 由 status-right 经 #() 每 status-interval（2s）调用一次。两件事：
-#   1. 输出全局三态计数，形如  ⚑2 ✦1 ✓3
-#      没有 AI pane 时输出空串（状态栏退回原样，无占位符）
+# ai-status.sh —— 由 status-right 经 #() 每 status-interval（2s）调用一次。三件事：
+#   1. 三态计数写进全局选项 @ai_wait/@ai_busy/@ai_idle，由 status-right 的 format 渲染
+#      （计数每轮都写；计数为 0 的那段不显示，状态栏退回只有时钟的样子）
 #   2. 把状态写进 tmux 选项，供三个展示面的 format 读取：
 #        @ai_state（pane 作用域）—— 这个 pane 是 AI pane 且状态是 X
 #        @ai_sess （会话作用域）—— 该会话内所有 pane 里最严重的那个状态
+#   3. busy>0 时按服务端版本决定要不要用 flock -n 拉起 ai-spin.sh（~10Hz 的动画 burst）：
+#      3.8+ 状态行是原生 #{A/…} 自绘，只有开着 choose-tree 才需要 burst；旧 server 照旧
+#
+# 本脚本**不向 stdout 输出任何东西**：#() 的输出按 interval 缓存，busy 图标要 10Hz
+# 的刷新只能走选项 + format（见 ai-spin.sh 的说明）。
 #
 # 谁在什么状态由 ai-panes.sh 判定，本脚本只做计数和写回。
 #
@@ -96,13 +101,40 @@ while read -r tag tok rest; do
 done <<EOF
 $(printf '%s\n' "$parsed" | grep -v '^COUNT ')
 EOF
+# 三态计数也写进选项（每轮都写，不复用上面的"仅变化才写"：format 渲染依赖它们，
+# 配置重载后可能残留旧值）。三条串进同一次 tmux 调用，调用次数仍是常数。
+add "set -g @ai_wait $(q "${wait:-0}")"
+add "set -g @ai_busy $(q "${busy:-0}")"
+add "set -g @ai_idle $(q "${idle:-0}")"
 [ -n "$cmd" ] && eval "tmux $cmd" 2>/dev/null || true
 
-out=""
-# ⚑ 等你确认：反色黄块，整条状态栏上最醒目的元素
-[ "${wait:-0}" -gt 0 ] && out="${out}#[fg=#21252b]#[bg=#e5c07b]#[bold] ⚑${wait} #[default]"
-[ "${busy:-0}" -gt 0 ] && out="${out}#[bg=#21252b]#[fg=#61afef] ✦${busy}#[default]"
-[ "${idle:-0}" -gt 0 ] && out="${out}#[bg=#21252b]#[fg=#98c379] ✓${idle}#[default]"
-[ -n "$out" ] && out="${out} "
+# ---- busy 动画 burst（按服务端版本决定要不要拉）----
+# 3.8+：状态行动画是 tmux 原生 #{A/…}（tmux.conf 里按版本分好了 format），burst 只剩
+# choose-tree 的 -F 帧需要（A 按 man 只许出现在状态行和 pane-border-format）——所以
+# 只在该 server 真开着 tree-mode 的 pane 时才拉。旧 server（<3.8）状态行还读 @ai_spin，
+# 照旧 busy>0 就拉。检测只花一次 tmux 调用，且仅在 busy>0 时发生（空闲路径零开销）。
+# flock -n 保证同一时刻只有一个 burst（多客户端时每个客户端的 status-right 都会跑本
+# 脚本，没锁会起一堆）；burst 自己会退，不需要 pid 记录。setsid 让 burst 脱离本 job 的
+# 进程组独立存活；三路重定向到 /dev/null 是必须的——否则 burst 继承 job 的输出管道，
+# tmux 会一直以为这个 #() 没跑完。
+if [ "${busy:-0}" -gt 0 ]; then
+    need=1
+    meta=$(tmux list-panes -a -F '#{version}~#{pane_mode}' 2>/dev/null) || meta=""
+    ver=${meta%%~*}
+    major=${ver%%.*}; minor=${ver#*.}; minor=${minor%%[!0-9]*}
+    # 版本解析失败时保持 need=1（旧行为）：多跑一个 burst 无害，漏跑才会丢动画
+    if [ -n "${major:-}" ] && [ -n "${minor:-}" ] && [ $(( major * 100 + minor )) -ge 308 ]; then
+        case "$meta" in
+            *tree-mode*) need=1 ;;
+            *)           need=0 ;;
+        esac
+    fi
+    if [ "$need" = 1 ]; then
+        lock="${TMPDIR:-/tmp}/tmux-ai-spin.$(printf '%s' "${TMUX:-}" | tr -c 'A-Za-z0-9' '_').lock"
+        setsid flock -n "$lock" "$dir/ai-spin.sh" >/dev/null 2>&1 < /dev/null &
+    fi
+fi
 
-printf '%s' "$out"
+# 不再输出任何文本：三段计数由 status-right 的 format 读 @ai_wait/@ai_busy/@ai_idle
+# 渲染（busy 段 3.8+ 是原生 A 帧、旧版是 @ai_spin，见 tmux.conf 的 if-shell）。
+# 见文件头的说明。

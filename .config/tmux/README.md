@@ -2,21 +2,28 @@
 
 ## Install
 
+Use `/bootstrap-dotfiles` for fresh-machine or post-clone activation. It collision-checks `~/.config/tmux`, creates only a missing safe link, validates this configuration repeatedly on a private socket, and sources an active server only after explicit approval. Without a skill host, run:
+
 ```bash
-# 软链配置（tmux 3.3+；圆角 popup 需要 3.3，Ubuntu 22.04 升级方法见 AGENTS.md）
-ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --check
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --apply
+```
 
-# 装 TPM 插件管理器
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+This base step does not need TPM, fzf, tldr, ruby, or yazi. Without them, `prefix=C-z`, splits, windows, and pane navigation still work; only their corresponding plugins or popup tools are unavailable.
 
-# 加载配置
-tmux source ~/.config/tmux/tmux.conf
+### Optional plugins and popup tools
 
-# 在 tmux 内 prefix + I 拉取插件，然后确认 tmux-jump 的运行时依赖：
+```bash
+# TPM plugin manager; install it only when tmux-jump or another TPM plugin is wanted.
+[ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+# Press prefix + I inside tmux, then verify the tmux-jump runtime dependency.
 command -v ruby || echo "tmux-jump 需要 ruby"
 ```
 
-> 完整依赖清单见 `AGENTS.md`。改完配置用 `tmux source ~/.config/tmux/tmux.conf` 重载。
+`prefix + c/f/?/a` requires `fzf >= 0.59`; `prefix + ?` also needs `tldr --update`, and `prefix + y` needs yazi. tmux 统一使用 **3.8**（从 `release_3.8` 分支构建，步骤见 `AGENTS.md`）。See `AGENTS.md` for the full dependency list and Ubuntu 22.04 tmux/fzf installation details.
+
+> Reload later configuration changes with `tmux source-file ~/.config/tmux/tmux.conf` after user approval.
 
 ## Prefix: `Ctrl+z`
 
@@ -77,19 +84,19 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 | 图标 | 含义 |
 |------|------|
 | `⚑` 黄（加粗） | **等你确认** —— 在问你问题或等权限批准 |
-| `✦` 蓝 | 进行中 |
+| `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 蓝（动态帧） | 进行中；10 帧每秒 1 圈（100ms 一帧），只在真有 AI 在跑时才动、跑完自动停 |
 | `✓` 绿 | 已完成 / 空闲 |
 
 四处可见：
 
 1. **窗口名旁** —— 只反映**当前会话**，且取窗口的**活动 pane**；分屏且 AI pane 非活动时不显示
-2. **`prefix + w` / `prefix + s` 选择器行首** —— 跨会话，**会话行 / 窗口行 / pane 行都有**。会话行是该会话内所有 pane 的**聚合**，取最严重的一个（等你确认 > 进行中 > 已完成），所以会话里只要有一个窗口在等你确认，`prefix + s` 折叠着也能看到 `⚑`（聚合值由 `scripts/ai-status.sh` 每 `status-interval` 写进会话选项 `@ai_sess`）
-3. **底部状态条右侧** —— 形如 `⚑2 ✦1 ✓3`，**跨所有会话逐 pane 统计**，是唯一不受上面两条作用域限制的视图；没有 AI pane 时不显示
-4. **`prefix + a` 的 AI 会话选择器** —— 只列 AI，扁平一张表，`⚑` 自动置顶，右侧实时预览对方屏幕。见下
+2. **`prefix + w` / `prefix + s` 选择器行首** —— 跨会话，**会话行 / 窗口行 / pane 行都有**。会话行是该会话内所有 pane 的**聚合**，取最严重的一个（等你确认 > 进行中 > 已完成），所以会话里只要有一个窗口在等你确认，`prefix + s` 折叠着也能看到 `⚑`（聚合值由 `scripts/ai-status.sh` 每 `status-interval` 写进会话选项 `@ai_sess`）；动态帧在选择器开着时跟着状态栏一起转
+3. **底部状态条右侧** —— 形如 `⚑2 ⠋1 ✓3`，**跨所有会话逐 pane 统计**，是唯一不受上面两条作用域限制的视图；没有 AI pane 时不显示
+4. **`prefix + a` 的 AI 会话选择器** —— 只列 AI，扁平一张表，`⚑` 自动置顶，右侧实时预览对方屏幕；列表每 0.2s 重渲染，进行中的帧跟着转、age 与排序保鲜。见下
 
 状态来源：qodercli 把状态写在它自己的 `pane_title` 里；Claude Code 不写，但它自己维护 `~/.claude/sessions/*.json`（就是它 fleetview 用的那份）。`scripts/ai-status.sh` 每 `status-interval`（2 秒）把两边归一化后写进 pane 选项 `@ai_state`，上面四处读的都是它。两个 CLI 都**零配置**，不需要挂任何 hook。
 
-图标最多滞后 2 秒。**tmux 的 format 故意不直接读 `pane_title`** —— 标题是 CLI 自己的地盘（Claude 运行时会不停改写），我们插手就会互相覆盖，图标每 2 秒闪一次。
+图标最多滞后一个 `status-interval`（2 秒）；busy 的转圈动画不受它限制——**tmux 3.8+** 由状态行里的原生 `#{A/…}` 自绘（tmux 每 100ms 自动重绘换帧，零后台进程），更旧的 server 由 `scripts/ai-spin.sh` 的 burst 以 ~10Hz 独立刷新。**tmux 的 format 故意不直接读 `pane_title`** —— 标题是 CLI 自己的地盘（Claude 运行时会不停改写），我们插手就会互相覆盖，图标会闪。
 
 ### AI 会话选择器（`prefix + a`）
 
@@ -98,7 +105,7 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 ```
 ⚑ 等你确认   3d  work:1.1     ~/proj/api               改登录流程
 ✓ 已就绪    16h  0:2.1        ~/proj/web               翻译上界与瓶颈分析
-✦ 进行中     0m  nvim:2.1     ~/dotfiles               AI 会话选择器
+⠋ 进行中     0m  nvim:2.1     ~/dotfiles               AI 会话选择器
 ```
 
 列依次是：状态 · 距上次活动多久 · `会话:窗口.面板` · 工作目录 · CLI 自己写的摘要。
@@ -119,7 +126,9 @@ tmux 内 nvim 通过 OSC 52 + tmux passthrough 写入系统剪贴板（服务端
 
 只有搜索态才会出现输入行；按键提示钉在最后一行，跟着模式变。右侧预览是对方 pane 的实时画面。
 
-需要 `fzf >= 0.59`（`apt` 上 Ubuntu 22.04 的 0.29 不够用，装法见 `AGENTS.md`）。
+列表是**活**的：`进行中` 的图标跟着状态栏一起转，age、⚑/✓ 与排序每 0.2s 保鲜一次（帧在脚本里按 100ms 时间片本地计算，不依赖后台进程）。刷新只换内容——光标按 `pane_id` 跟踪（fzf `--track --id-nth=3`），排序变化不会把选择带走；**搜索（insert）态列表暂停刷新**（fzf 重绘会让搜索框光标闪，冻结几秒换输入绝对稳），`esc` 回浏览自动恢复。这套用 fzf 的 `--listen` 实现；fzf 太老（没有 `--id-nth`）时自动退回静态快照，其余不变。
+
+需要 `fzf >= 0.59`（`apt` 上 Ubuntu 22.04 的 0.29 不够用，装法见 `AGENTS.md`）；列表实时刷新需要支持 `--listen`/`--id-nth` 的新版 fzf（0.74+）。
 
 ### Copy Mode
 

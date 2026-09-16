@@ -10,12 +10,12 @@
 
 | 软件 | 用途 | 备注 |
 |------|------|------|
-| tmux >= 3.3 | 终端复用器 | 圆角和统一配色的 `display-popup` 需要 3.3+；配置对 3.2a 有条件保护，可继续使用但 popup 外框保持方角 |
+| tmux 3.8 | 终端复用器 | **统一版本**，从 `release_3.8` 分支构建（见下）。配置仍带旧版本条件保护：旧 server 可继续使用，但 popup 外框保持方角 |
 | fzf >= 0.59 | popup/选择器界面 | Ubuntu 22.04 apt 的 0.29 太旧，安装步骤见下 |
 | tldr | `prefix + ?` 命令速查 | 首次运行需 `tldr --update` 下载页面缓存 |
 | yazi | `prefix + y` 浮窗文件管理器 | 可选；未安装时只显示提示，不影响其他功能。安装步骤见下 |
-| Git | TPM 拉取插件 | 必须 |
-| TPM | 插件管理器 | `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm` |
+| Git | 拉取仓库/插件 | Phase 1 克隆 dotfiles 需要；Phase 2 安装 TPM 插件时也需要 |
+| TPM | 插件管理器 | 可选；只在需要 tmux-jump 等 TPM 插件时安装：`git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`。基础 prefix/分屏/窗口配置不依赖 TPM |
 | 剪贴板工具 | 视终端而定 | 复制走**两条并行**的路：`set-clipboard on` 的 OSC 52，加上探到的本地工具（`pbcopy`/`wl-copy`/`xclip`/`clip.exe`）。终端支持 OSC 52 就不需要工具；**不支持的话就得靠 SSH X11 转发 + `xclip`**（实测有这样的机器） |
 
 ### 插件依赖（按需）
@@ -25,58 +25,51 @@
 | tmux-jump | `ruby` | 跳转脚本用 ruby 运行，PATH 里必须有 `ruby` |
 | vim-tmux-navigator | Neovim | nvim 侧装 `christoomey/vim-tmux-navigator`；tmux 侧是 tmux.conf 原生绑定，不依赖 TPM |
 
-### Ubuntu 22.04 升级 tmux
+### Ubuntu 22.04 统一安装 tmux 3.8
 
-Ubuntu 22.04 apt 只有 3.2a。完整 popup 样式需要 3.3+；当前验证版本是 3.7c。安装到版本化目录，不覆盖 `/usr/bin/tmux`：
+Ubuntu 22.04 apt 只有 3.2a（不要用）。**统一使用 3.8**：3.8 尚未出 release 包，从 `release_3.8` 分支构建（当前分支自报 `3.8-rc2`）；分支是滑动目标，要可复现就 clone 后记下 commit（`git -C /tmp/tmux-3.8 rev-parse HEAD`）。安装到版本化目录，不覆盖 `/usr/bin/tmux`：
 
 ```bash
-apt-get install -y build-essential libevent-dev libncurses-dev bison pkg-config
-curl -fL -o /tmp/tmux-3.7c.tar.gz https://github.com/tmux/tmux/releases/download/3.7c/tmux-3.7c.tar.gz
-printf '7c60cae9a0e25288e2e24750aafc9e8800fc7fd4555e447e1b29ee4201cfb3bf  /tmp/tmux-3.7c.tar.gz\n' | sha256sum -c -
-tar -xzf /tmp/tmux-3.7c.tar.gz -C /tmp
-mkdir -p ~/.local/opt/tmux-3.7c
-(cd /tmp/tmux-3.7c && ./configure --prefix="$HOME/.local/opt/tmux-3.7c" && make -j2 && make install)
-ln -sfn ~/.local/opt/tmux-3.7c/bin/tmux ~/.local/bin/tmux
+apt-get install -y build-essential autoconf automake libevent-dev libncurses-dev bison pkg-config
+git clone --depth 1 --branch release_3.8 https://github.com/tmux/tmux.git /tmp/tmux-3.8
+mkdir -p ~/.local/opt/tmux-3.8
+(cd /tmp/tmux-3.8 && sh autogen.sh && ./configure --prefix="$HOME/.local/opt/tmux-3.8" && make -j2 && make install)
+ln -sfn ~/.local/opt/tmux-3.8/bin/tmux ~/.local/bin/tmux
 ```
 
-新版 client 可连接现有 3.2a server，但 `tmux -V` 只显示 client 版本；服务端版本用 `tmux display-message -p '#{version}'`。不要为了升级强杀仍有工作的 server：现有会话全部自然结束后，下次启动会自动使用 3.7c，圆角 popup 才真正生效。
+新版 client 可连接现有旧 server，但 `tmux -V` 只显示 client 版本；服务端版本用 `tmux display-message -p '#{version}'`。不要为了升级强杀仍有工作的 server：现有会话全部自然结束后，下次启动会自动使用 3.8。
 
 - **ruby**: `apt install ruby` / `brew install ruby`
 
 ## Installation
 
+空机器或 clone 后的基础激活统一调用 `/bootstrap-dotfiles`。它会先检查碰撞，只创建缺失的 `~/.config/tmux` 链接，用私有 socket 连续加载配置并验证 `prefix=C-z`；只有用户明确许可时才 source 活跃 server，绝不 kill/restart。无 skill host 时直接运行：
+
 ```bash
-# 1. 软链配置（tmux 3.1+ 读 XDG 路径）
-ln -sf ~/dotfiles/.config/tmux ~/.config/tmux
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --check
+~/dotfiles/skills/bootstrap-dotfiles/scripts/bootstrap.sh --apply
+```
 
-# 2. 装 TPM
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+不要在这里手写 `ln -sfn` 或默认-socket 验证命令替代脚本。基础 prefix/分屏/窗口/pane 导航不依赖 TPM、fzf、tldr、ruby 或 yazi。
 
-# 3. 加载配置
-tmux source ~/.config/tmux/tmux.conf
+需要插件和 popup 工具时再按需安装：
 
-# 4. 在 tmux 内按 prefix + I 拉取插件（prefix = Ctrl+z）
+```bash
+[ -d ~/.tmux/plugins/tpm ] || git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+# 在 tmux 内按 prefix + I 拉取插件（prefix = Ctrl+z）
 
-# 5. 确保 ruby 在 PATH（tmux-jump 需要）
 command -v ruby || echo "请先安装 ruby"
-
-# 6. AI 状态指示与选择器：给脚本加可执行位（软链过来后权限可能丢）
 chmod +x ~/.config/tmux/scripts/*.sh
 
-# 7. prefix + a 的 AI 选择器和 prefix + ? 的 tldr 界面都需要 fzf >= 0.59。
-#    **不能用 apt**：Ubuntu 22.04 只有 0.29，没有双模式要用的输入区切换动作。
-#    装上游静态二进制（会遮住 apt 的那个，不动系统包）
+# prefix + a 和 prefix + ? 需要 fzf >= 0.59；Ubuntu 22.04 的 apt 版本过旧。
 curl -fsSL https://github.com/junegunn/fzf/releases/download/v0.74.2/fzf-0.74.2-linux_amd64.tar.gz \
   | tar xz -C /usr/local/bin fzf && fzf --version
 
-# 9. prefix + ? 的命令速查
 apt-get install -y tldr
 tldr --update
 
-# 10. 可选：prefix + y 的浮窗文件管理器
-# Ubuntu 22.04 没有合适的 apt 包；从 Yazi 官方 Releases 下载与架构匹配的预编译包，
-# 解压后把其中的 yazi 和 ya 安装到 ~/.local/bin/。
-# 不要使用旧命令 `cargo install yazi-fm yazi-cli`：当前发布包缺少内置插件文件，会编译失败。
+# prefix + y 的 yazi 可选；从官方 Releases 安装匹配架构的 yazi 和 ya 到 ~/.local/bin。
+# 不要使用旧命令 `cargo install yazi-fm yazi-cli`。
 ```
 
 ### 开发与隔离验证
@@ -96,7 +89,7 @@ tldr --update
 
 | 依赖 | 下限 | 卡在哪个特性 | 不满足会怎样 |
 |------|------|------------|------------|
-| tmux | **3.3**（完整样式；当前 client 3.7c） | `popup-border-lines rounded`、`popup-style`、`popup-border-style`；其余状态栏/选择器功能仍兼容 3.2a，配置用服务端版本条件保护。另一台 next-3.8 也兼容，且 `passthrough` 选项不存在（`tmux.conf` 有记） | 3.2a 下功能可用，但 popup 外框仍是方角且不能统一着色 |
+| tmux | **3.8**（统一版本，release_3.8 构建） | `popup-border-lines rounded`、`popup-style`、`popup-border-style`、状态栏原生动画帧 `#{A/…}`（旧版退化为 burst 驱动，见动态帧一节）；旧版本兼容由服务端版本条件保护。3.8 没有 `passthrough` 选项（`tmux.conf` 有记） | 旧 server（3.2a 等）功能可用，但 popup 外框仍是方角且不能统一着色，动画走外部 burst |
 | `tmux-256color` terminfo | 可选 | `default-terminal` 优先用它（有 `Smulx` undercurl 和斜体）；`if-shell` 探不到会自动退回 `xterm-256color` | 只是失去 undercurl / 斜体，其余照常 |
 | fzf | **0.59**（实测装的是 0.74.2） | `--no-input` / `show-input` / `hide-input` —— `prefix+a` 与 `prefix+?` 的 vim 双模式。另外还要 `rebind`（0.30 引入）和 `change-header`（0.40 引入），都被 0.59 覆盖 | fzf 吐一句参数错误就退出、pane/popup 瞬间关掉，等于静默失败；两个脚本都有显式版本检查 |
 | Claude Code | 实测 2.1.161 / 2.1.220 可用。`claude agents` 子命令的下限是 2.1.139，`sessions/*.json` 是它的后端，**推测**同批引入，未实测更早版本 | `~/.claude/sessions/<pid>.json` 的 `status` / `procStart` / `cwd` / `kind` 字段。**`kind` 缺失的记录会被整条丢弃**（照抄 Claude 自己的行为），所以更早版本若不写 `kind` 就全都不认 | Claude 的 pane 永远没图标，qodercli 不受影响 |
@@ -135,13 +128,16 @@ tldr --update
 
 ### AI 状态指示与选择器
 
-三个脚本，一条数据流：
+四个脚本，一条数据流：
 
 | 脚本 | 谁调 | 干什么 |
 |------|------|--------|
 | `scripts/ai-panes.sh` | 下面两个 | **唯一的判定逻辑**：遍历所有 pane，判定哪些在跑 AI、什么状态，输出 TSV。纯数据，不排版 |
-| `scripts/ai-status.sh` | `status-right` 的 `#()`，每 `status-interval`（2s） | 输出 `⚑2 ✦1 ✓3` 计数；把状态写进 `@ai_state`（pane）和 `@ai_sess`（会话） |
-| `scripts/ai-pick.sh` | `prefix + a` | fzf 界面 + 跳转 |
+| `scripts/ai-status.sh` | `status-right` 的 `#()`，每 `status-interval`（2s） | 把三态计数写进 `@ai_wait`/`@ai_busy`/`@ai_idle`（**不输出 stdout**），把状态写进 `@ai_state`（pane）与 `@ai_sess`（会话）；busy>0 时用 `flock -n` 拉起 ai-spin.sh |
+| `scripts/ai-spin.sh` | 被 ai-status.sh 按需拉起 | busy 动画 burst：~10Hz 更新 `@ai_spin` 并 `refresh-client -S` 强制重绘状态栏；一轮 ~2.5s 后自己退出 |
+| `scripts/ai-pick.sh` | `prefix + a`；`--rows` 被它自己的 reload 循环周期调用 | fzf 界面 + 跳转；列表靠 `--listen` 周期重渲染保活 |
+
+三段计数为什么不从脚本 stdout 输出：**`#()` 的输出按 `status-interval` 缓存**，busy 图标要 10Hz 的刷新只能走「选项 + format」，因为 format 在每次状态栏重绘时都会重新展开，而 `#()` 不会（见下）。
 
 **两个 CLI 都零配置**，不需要在 Claude 或 qodercli 里挂任何 hook。
 
@@ -159,6 +155,21 @@ tldr --update
 
 **铁律：我们绝不写 `pane_title`。** 曾经给 Claude 合成过标题，结果 Claude 自己也在写标题（设置项 `terminalTitleFromRename`），运行时每渲染一次就覆盖掉，我们每 2 秒抢回来 —— 底部标签的图标就一闪一闪。现在标题完全归 CLI 所有，我们只写自己的 `@ai_state`，没人能覆盖。tmux 的 format 也一律读 `@ai_state`，不读 `pane_title`。代价是图标最多滞后一个 `status-interval`。
 
+**busy 图标是动态帧**：`⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏` 圆点 spinner（U+28xx，East Asian Width = N；10 帧、100ms 一帧、1s 一圈；比实心象限 ⣾⣽⣻⢿ 小巧）。帧值有两个来源，tmux.conf 用 `if-shell -F '#{>=:#{version},3.8}'` 按服务端版本二选一（**两份都留着**，运行中的旧 server 重载也不能坏）：**3.8+ 原生 `#{A/…}`**（状态行自绘、零外部进程）；**旧版 `@ai_spin`**（burst 写帧 + `refresh-client -S` 重绘）。下面几条实测结论改动前先读：
+
+1. **`status-interval` 最小 1s**（0.5 直接报 value is invalid），所以「靠 interval 换帧」的动画上限就是 1 帧/秒，观感卡；`refresh-client -S` 可以把重绘提到 ~10Hz。
+2. **`refresh-client -S` 会立即重新展开 format，但不会重跑 `#()`**（实测：10Hz -S 下 `date` 探针仍只按 interval 执行）。所以聚合脚本的节奏（2s）和动画刷新（100ms）互不拖累，但也意味着 **busy 计数不能放在脚本 stdout 里**——`#()` 输出按 interval 缓存，必须由脚本写选项、format 读选项渲染。附带效应：每次 -S 的状态栏重绘还会顺带重建当前窗口里可见的 mode（见第 5 条），choose-tree 的动画就挂在这条路上。
+3. **`#{A/count:frame,frame,…}` 是 3.8 的状态行原生动画**：每 count×100ms 换一帧（count 省略即 1）；**只要状态行里出现 A 修饰符，tmux 自己每 100ms 重绘**（3.8-rc2 隔离实测：10 帧/秒连转、4s 仅 ~1 jiffy CPU；`window-status-format` 里同样可用）。**但 man 限定它只出现在状态行和 `pane-border-format`**——`choose-tree -F` 和 fzf 都用不了，这是下面两处 picker 不能借它的原因。
+4. **busy burst 是短命进程 + flock，不是守护进程**：ai-status.sh 拉起时用 `setsid flock -n <每 server 一把>/ai-spin.sh`，一轮 ~2.5s 覆盖 2s 的 interval 后自己退出，期间每 0.8s 查 `@ai_busy` 归零提前收工。三个约束都不能省：
+   - `setsid`：burst 必须脱离 `#()` job 的进程组，否则 job 结束被一并回收；
+   - 三路重定向 `/dev/null`：burst 若继承 job 的输出管道，tmux 会一直认为该 `#()` 没跑完；
+   - `flock -n`：每个客户端的 status-right 都会跑聚合脚本，没锁会起一堆 burst。
+   帧由 **100ms 时间片取模**（不是自增，10 帧 = 1s 一圈），所以 burst 接力时不会跳帧。**拉起条件按版本分**：3.8+ 只在「busy 且该 server 有 tree-mode 的 pane」时才拉（状态行已不需要它；检测花一次 list-panes、仅在 busy>0 时发生）；旧 server 仍是 busy>0 就拉。旧路径的代价（~10 次 tmux 调用/秒 ≈ 单核 2.5%）只在旧 server 或 3.8 开着 picker 时出现，空闲时零开销。
+5. `choose-tree` 的 `-F` 与 `ai-pick.sh` 的列表图标**都会转**，但走的是两条完全不同的路（别把 picker 当"快照界面"，这里踩过一次误判）：
+   - **choose-tree（prefix+s/w）**：读 @ai_spin（A 不能用于 -F）。tmux 在给客户端重绘状态栏时，会顺带对当前窗口里可见的每个 mode 跑一遍 update 钩子（`server-client.c` 的 `server_client_check_modes` → `window_tree_update` → `mode_tree_build`），整份 `-F` 在那时重新展开——burst 的 `refresh-client -S` 每 100ms 触发一次，选择器开着时行首帧以 ~10Hz 更新（3.7c 隔离 server 实测：tree 行首的帧序列连续推进）。3.8 上 burst 由 tree-open 触发（≤2s 就位，3.8-rc2 实测）；没有 burst 时退回按 status-interval 重绘，帧每 2s 变一次——busy 行才显示帧，实际观感无差。
+   - **fzf 列表（prefix+a）**：fzf 没有行级更新，借不到上面那条路；列表是 `--listen`（unix socket）+ 后台每 200ms 把**预生成的行文件** `cat` 进 fzf（async `reload`，命令瞬时所以无竞态）重渲染出来的，**帧在脚本里按 100ms 时间片本地取模**（不读 @ai_spin——3.8 起 burst 只在 tree 打开时跑，读选项会拿到冻帧）。光标必须 `--track --id-nth=3` 按 pane_id 跟踪，否则排序一变（等确认置顶、age 变化）按行号停的光标就选错会话（实测重排后光标跟着 pane_id 走、查询词保留）。**insert（搜索）态暂停 reload**：fzf 每次 reload 重绘输入行都会把终端光标藏一下（实测：慢命令窗口 38ms、纯 cat 仍 19ms；30ms 采样 3s 能捕到 8~16 次），肉眼就是「搜索框一直闪」；a/i// 的绑定 touch 标记文件、esc 的绑定删掉，搜索时列表冻结（回浏览自动继续），修复后实测 0/100 次隐藏。老 fzf 没有 `--id-nth` 时整体退化成静态快照（少一个循环），功能不受损。
+6. 帧字形同样受「East Asian Width = N」约束，换帧集时先确认宽度，别引入 emoji 变体字形。
+
 `@ai_state` 是 pane 作用域选项，但在 **window 作用域会解析到该窗口的活动 pane**，所以 `window-status-format` 直接读得到。会话行读不到（只会解析到活动 pane，对「另一个窗口在等确认」的会话会报错状态），所以会话聚合由 `ai-status.sh` 预先算好写进 `@ai_sess`。
 
 **Claude 的 pid 怎么对上 pane**：`sessions/<pid>.json` 里的 `procStart` 实测就是 `/proc/<pid>/stat` 第 22 字段（starttime），拿它挡 pid 复用——进程没了或 starttime 不匹配就是陈文件。连接键是 tty，直接从 stat 的 `tty_nr` 纯算术解出 `/dev/pts/N`，再和 `#{pane_tty}` join，不 fork `readlink`。
@@ -171,7 +182,17 @@ tldr --update
 
 - `--no-input` 隐藏输入区、让按键只触发绑定，这就是 normal 模式；但**必须再配 `unbind`/`rebind`**——进 insert 后若 `j`/`k` 还绑着 `down`/`up`，就打不出 `j` 这个字符了。上游 CHANGELOG 的 0.59.0 示例正是这么写的。
 - `esc` 的动作顺序里 **`clear-query` 必须排在 `hide-input` 之前**。反了的话输入区一藏起来，查询变更就不再触发重新过滤，回到 normal 时列表还停在过滤后的结果上。
-- 列表行的可见内容拼成**一个** TSV 字段再 `--with-nth=4`。用多个字段会被 fzf 用原始分隔符拼回去，tab 按 8 列制表位展开，宽度全被吃掉、列也对不齐。
+- 列表行的可见内容拼成**一个** TSV 字段再 `--with-nth=4`。用多个字段会被 fzf 用原始分隔符拼回去，tab 按 8 列制表位展开，宽度全被吃掉、列也对不齐。第 3 列（pane_id）同时是 `--id-nth` 的身份字段，reload 时跟踪光标靠它，位置不能动。
+
+### 3.8 适配（2026-09）与配置侧决策
+
+本仓库统一到 tmux 3.8（`release_3.8` 构建，rc 期自报 `3.8-rc2`）后做的取舍，改相关部分前先看：
+
+- 状态行动画切到原生 `#{A/…}`，旧版分支经 `if-shell` 保留——**所有机器重启完之前两份 format 都要在**，不能只删旧分支
+- `theme terminal`（3.8+ 才有）：3.8 默认探测终端明暗并启用内置主题，会改变未显式配色的部件（copy-mode 选择、消息行、菜单）；整套 AtomOneDark 是钉死的，terminal = 与旧版观感一致。想试新主题改成 detect
+- `tree-mode-selection-style "bg=#3e4451"`：choose-tree 选中行（3.8 起样式覆盖整行）钉成与 window-status-current 同款高亮
+- 新默认绑定落在 prefix 表：`Tab`/`BTab` = 新浮动面板 + switch-mode 快切（`new-pane -E …`）、`g` 系（浮动面板操作）、`T`（改 pane 标题）——本配置没占用这些键，无冲突（3.8-rc2 实测）
+- `passthrough` 选项在 3.8 仍不存在（conf 注释已记）；`terminal-features` 支持 `@` 后缀禁用单个特性（如 `linux*:AX@`）
 
 ### 统一 fzf 层与 TLDR popup
 
